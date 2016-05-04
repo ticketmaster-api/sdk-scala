@@ -4,7 +4,7 @@ For more detailed information about the API and to get your API key head [here](
 
 ## Create API client
 
-```scala
+```tut:silent
 import com.ticketmaster.api.discovery._
 
 val api = DiscoveryApi("your-api-key")
@@ -16,7 +16,7 @@ API calls are non-blocking so ensure that there is a `scala.concurrent.Execution
 
 API calls all take a case class representing the criteria for that call. For example, search events takes a `com.ticketmaster.api.discovery.SearchEventsRequest` on which you can set your criteria.
 
-```scala
+```tut:silent
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -29,7 +29,7 @@ See docs for full list of criteria and resources they relate to.
 
 Rate limit details are provided in every response in `com.ticketmaster.api.discovery.RateLimits`. Details include current rate limit per day, time for next rate limit reset, how many calls remain in current time period and how many calls over the rate limit. Also, API calls for searching will return a `com.ticketmaster.api.discovery.Page` as part of the result.
 
-```scala
+```tut:silent
 pendingResponse.map { response =>
     println(response.pageResult.result.events) // search results
     println(response.pageResult.page) // paging details
