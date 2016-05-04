@@ -8,5 +8,6 @@ Seq(
   "org.scoverage" % "sbt-scoverage" % "1.3.1",
   "net.virtual-void" % "sbt-dependency-graph" % "0.8.2",
   "com.timushev.sbt" % "sbt-updates" % "0.1.9",
-  "com.github.gseitz" % "sbt-release" % "1.0.3"
+  "com.github.gseitz" % "sbt-release" % "1.0.3",
+  "org.tpolecat" % "tut-plugin" % "0.4.2"
 ).map(addSbtPlugin)
