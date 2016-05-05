@@ -5,14 +5,13 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 import argonaut.Argonaut._
 import argonaut._
 import com.ning.http.client.{Response => NingResponse}
+import com.ticketmaster.api.discovery.domain.{Segment => CSegment, _}
 import com.ticketmaster.api.discovery.Filter.Filtered
 import dispatch._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure, Success}
-
-import com.ticketmaster.api.discovery.{Segment => CSegment}
 
 
 private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecutor = Http) extends DiscoveryApi {
@@ -45,7 +44,7 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
 
     val req = url(ROOT_URL) / "events.json" <<? queryParams
 
-    handle(req, response => SearchEventsResponse(decode[PageResultImpl[Events]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchEventsResponse(decode[PageResult[Events]](response.getResponseBody), extractRateLimitInfo(response)))
   }
 
   override def getEvent(getEventRequest: GetEventRequest)(implicit ec: ExecutionContext): Future[Response[Event]] = {
@@ -76,7 +75,7 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
 
     val req = url(ROOT_URL) / "attractions.json" <<? queryParams
 
-    handle(req, response => SearchAttractionsResponse(decode[PageResultImpl[Attractions]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchAttractionsResponse(decode[PageResult[Attractions]](response.getResponseBody), extractRateLimitInfo(response)))
   }
 
   override def getAttraction(getAttractionRequest: GetAttractionRequest)(implicit ec: ExecutionContext): Future[GetAttractionResponse] = {
@@ -98,7 +97,7 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
 
     val req = url(ROOT_URL) / "venues.json" <<? queryParams
 
-    handle(req, response => SearchVenuesResponse(decode[PageResultImpl[Venues]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchVenuesResponse(decode[PageResult[Venues]](response.getResponseBody), extractRateLimitInfo(response)))
   }
 
   override def getVenue(getVenueRequest: GetVenueRequest)(implicit ec: ExecutionContext): dispatch.Future[Response[Venue]] = {
@@ -119,7 +118,7 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
 
     val req = url(ROOT_URL) / "classifications.json" <<? queryParams
 
-    handle(req, response => SearchClassificationsResponse(decode[PageResultImpl[Classifications]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchClassificationsResponse(decode[PageResult[Classifications]](response.getResponseBody), extractRateLimitInfo(response)))
   }
 
   override def getClassification(getClassificationRequest: GetClassificationRequest)(implicit ec: ExecutionContext): dispatch.Future[Response[Classification]] = {
@@ -185,13 +184,13 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
 
   def shutdown = http.shutdown
 
-  implicit def SearchEventsResultCodec: CodecJson[PageResultImpl[Events]] = casecodec3(PageResultImpl.apply[Events], PageResultImpl.unapply[Events])("_embedded", "page", "_links")
+  implicit def SearchEventsResultCodec: CodecJson[PageResult[Events]] = casecodec3(PageResult.apply[Events], PageResult.unapply[Events])("_embedded", "page", "_links")
 
-  implicit def SearchAttractionsResultCodec: CodecJson[PageResultImpl[Attractions]] = casecodec3(PageResultImpl.apply[Attractions], PageResultImpl.unapply[Attractions])("_embedded", "page", "_links")
+  implicit def SearchAttractionsResultCodec: CodecJson[PageResult[Attractions]] = casecodec3(PageResult.apply[Attractions], PageResult.unapply[Attractions])("_embedded", "page", "_links")
 
-  implicit def SearchVenuesResultCodec: CodecJson[PageResultImpl[Venues]] = casecodec3(PageResultImpl.apply[Venues], PageResultImpl.unapply[Venues])("_embedded", "page", "_links")
+  implicit def SearchVenuesResultCodec: CodecJson[PageResult[Venues]] = casecodec3(PageResult.apply[Venues], PageResult.unapply[Venues])("_embedded", "page", "_links")
 
-  implicit def SearchClassificationsResultCodec: CodecJson[PageResultImpl[Classifications]] = casecodec3(PageResultImpl.apply[Classifications], PageResultImpl.unapply[Classifications])("_embedded", "page", "_links")
+  implicit def SearchClassificationsResultCodec: CodecJson[PageResult[Classifications]] = casecodec3(PageResult.apply[Classifications], PageResult.unapply[Classifications])("_embedded", "page", "_links")
 
   implicit def EventsCodec: CodecJson[Events] = casecodec1(Events.apply, Events.unapply)("events")
 
