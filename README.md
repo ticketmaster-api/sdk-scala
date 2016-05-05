@@ -51,3 +51,8 @@ This library piggy-backs on `scala.concurrent.Future` semantics for handling err
 * Allow pluggable http client.
 * Allow pluggable json parser.
 * Turn search results into a stream/iterator.
+
+## Building
+Normal build -> `sbt clean test`
+With coverage -> `sbt clean coverage test coverageReport`
+
