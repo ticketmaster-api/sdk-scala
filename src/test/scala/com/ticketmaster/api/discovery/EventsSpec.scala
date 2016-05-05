@@ -1,6 +1,8 @@
 package com.ticketmaster.api.discovery
 
-import java.time.{ZoneId, Instant, Clock, ZonedDateTime}
+import java.time.{Clock, Instant, ZoneId, ZonedDateTime}
+
+import com.ticketmaster.api.discovery.domain._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

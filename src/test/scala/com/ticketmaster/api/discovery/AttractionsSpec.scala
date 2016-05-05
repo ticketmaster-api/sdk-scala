@@ -2,6 +2,8 @@ package com.ticketmaster.api.discovery
 
 import java.time.ZonedDateTime
 
+import com.ticketmaster.api.discovery.domain._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
