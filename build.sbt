@@ -50,3 +50,7 @@ sourceGenerators in Compile += Def.task {
     """.stripMargin)
   Seq(file)
 }.taskValue
+
+//SCoverage
+coverageMinimum := 90
+coverageFailOnMinimum := true
