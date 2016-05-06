@@ -3,17 +3,18 @@ package com.ticketmaster.api.discovery
 import java.time.ZonedDateTime
 
 import com.ticketmaster.api.discovery.domain._
+import com.ticketmaster.api.discovery.http.protocol.{HttpResponse, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class ClassificationsSpec extends ApiSpec with HttpDsl {
+class ClassificationsSpec extends BaseSpec with TestableDiscoveryApi {
 
   override implicit val patienceConfig = PatienceConfig(2 seconds, 200 millis)
 
-  val apiKey = "12345"
+  val testApiKey = "12345"
 
   val responseHeaders = Map("Rate-Limit" -> "5000",
     "Rate-Limit-Available" -> "5000",
@@ -23,14 +24,10 @@ class ClassificationsSpec extends ApiSpec with HttpDsl {
   behavior of "discovery classification API"
 
   it should "search for all classifications" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/classifications.json?apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "classifications.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(ClassificationsSpec.searchClassificationsResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody ClassificationsSpec.searchClassificationsResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[PageResponse[Classifications]] = api.searchClassifications(SearchClassificationsRequest())
 
     whenReady(pendingResponse) { r =>
@@ -43,14 +40,10 @@ class ClassificationsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "get a classification" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/classifications/KZFzniwnSyZfZ7v7nE.json?apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "classifications" / "KZFzniwnSyZfZ7v7nE.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(ClassificationsSpec.getClassificationResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody ClassificationsSpec.getClassificationResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[Response[Classification]] = api.getClassification(GetClassificationRequest("KZFzniwnSyZfZ7v7nE"))
 
     whenReady(pendingResponse) { r =>
@@ -59,16 +52,15 @@ class ClassificationsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "throw exception if classification not found" in {
-    val response = mockResponse withStatus 404 withBody ClassificationsSpec.error404
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "classifications" / "abcde.json"
+    val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(ClassificationsSpec.error404))
+    val api = testableApi(expectedRequest, response)
 
-    val http = mockHttp expects anything returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
-    val pendingResponse: Future[Response[Classification]] = api.getClassification(GetClassificationRequest("12345"))
+    val pendingResponse: Future[Response[Classification]] = api.getClassification(GetClassificationRequest("abcde"))
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ResourceNotFoundException]
-      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=12345)")
+      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=abcde)")
     }
   }
 }
@@ -176,7 +168,7 @@ object ClassificationsSpec {
       |{
       |	"errors": [{
       |		"code": "DIS1004",
-      |		"detail": "Resource not found with provided criteria (locale=en-us, id=12345)",
+      |		"detail": "Resource not found with provided criteria (locale=en-us, id=abcde)",
       |		"status": "404",
       |		"_links": {
       |			"about": {
