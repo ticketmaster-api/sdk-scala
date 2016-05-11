@@ -6,9 +6,8 @@ For more detailed information about the API and to get your API key head [here](
 
 ```tut:silent
 import com.ticketmaster.api.discovery._
-import com.ticketmaster.api.discovery.domain._
 
-val api = DiscoveryApi("your-api-key")
+val api = Discovery("your-api-key")
 ```
 
 ## Making API calls
@@ -20,6 +19,8 @@ All take a case class representing the criteria for that call. For example, sear
 ```tut:silent
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
+import com.ticketmaster.api.discovery.domain._
 
 val criteria = SearchEventsRequest(keyword = "coachella", size = 5)
 
@@ -34,6 +35,10 @@ Rate limit details are provided in every response in `com.ticketmaster.api.disco
 
 This library piggy-backs on `scala.concurrent.Future` semantics for handling errors. Exceptions can be handled in the `recover` combinator.
 
+## Http client
+
+The default http client is [dispatch](https://github.com/dispatch/reboot). It is possible to use a different http client by extending `com.ticketmaster.api.discovery.http.Http` and overriding method `http` in your own instance of `com.ticketmaster.api.discovery.HttpDiscoveryApi`.
+
 ## Remaining work
 
 * Expose _links and _embedded for each resource.
@@ -41,8 +46,7 @@ This library piggy-backs on `scala.concurrent.Future` semantics for handling err
 
 ## Wish list
 
-* Allow pluggable http client.
-* Allow pluggable json parser.
+* Allow pluggable json parser. Currently using [argonaut](argonaut.io) but likely to move to [rapture](https://github.com/propensive/rapture/blob/dev/doc/json.md).
 * Turn search results into a stream/iterator.
 
 ## Build notes

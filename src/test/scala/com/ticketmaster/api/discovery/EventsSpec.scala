@@ -3,17 +3,19 @@ package com.ticketmaster.api.discovery
 import java.time.{Clock, Instant, ZoneId, ZonedDateTime}
 
 import com.ticketmaster.api.discovery.domain._
+import com.ticketmaster.api.discovery.http.protocol.{HttpRequest, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class EventsSpec extends ApiSpec with HttpDsl {
+
+class EventsSpec extends BaseSpec with TestableDiscoveryApi {
 
   override implicit val patienceConfig = PatienceConfig(2 seconds, 200 millis)
 
-  val apiKey = "12345"
+  val testApiKey = "12345"
 
   val responseHeaders = Map("Rate-Limit" -> "5000",
     "Rate-Limit-Available" -> "5000",
@@ -23,14 +25,10 @@ class EventsSpec extends ApiSpec with HttpDsl {
   behavior of "discovery event API"
 
   it should "search for an event by keyword" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/events.json?keyword=coachella&apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("keyword" -> "coachella", "apikey" -> testApiKey)) / "events.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.searchEventsResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody EventsSpec.searchEventsResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(SearchEventsRequest(keyword = "coachella"))
 
     whenReady(pendingResponse) { r =>
@@ -43,14 +41,10 @@ class EventsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "search for an event by start date" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/events.json?startDateTime=2016-04-20T02:00:00Z&apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("startDateTime" -> "2016-04-20T02:00:00Z", "apikey" -> testApiKey)) / "events.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.searchEventsResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody EventsSpec.searchEventsResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val searchEventsRequest = SearchEventsRequest(startDateTime = ZonedDateTime.now(Clock.fixed(Instant.ofEpochMilli(1461117600000L), ZoneId.of("UTC"))))
     val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(searchEventsRequest)
 
@@ -64,32 +58,24 @@ class EventsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "get event images" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/events/k7vGFfdS_Gp6G/images.json?apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "k7vGFfdS_Gp6G" / "images.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.getEventImagesResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody EventsSpec.getEventImagesResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[Response[EventImages]] = api.getEventImages(GetEventImagesRequest("k7vGFfdS_Gp6G"))
 
     whenReady(pendingResponse) { r =>
       r.result.imageType should be("event")
       r.result.id should be("k7vGFfdS_Gp6G")
-      r.result.images should have length(10)
+      r.result.images should have length (10)
     }
   }
 
   it should "get an event" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/events/1AtZAvvGkdzqJ-n.json?apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "1AtZAvvGkdzqJ-n.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.getEventResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody EventsSpec.getEventResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("1AtZAvvGkdzqJ-n"))
 
     whenReady(pendingResponse) { r =>
@@ -98,16 +84,15 @@ class EventsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "throw exception if event not found" in {
-    val response = mockResponse withStatus 404 withBody EventsSpec.error404
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "abcde.json"
+    val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(EventsSpec.error404))
+    val api = testableApi(expectedRequest, response)
 
-    val http = mockHttp expects anything returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
-    val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("12345"))
+    val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("abcde"))
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ResourceNotFoundException]
-      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=12345)")
+      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=abcde)")
     }
   }
 }
@@ -539,7 +524,7 @@ object EventsSpec {
       |{
       |	"errors": [{
       |		"code": "DIS1004",
-      |		"detail": "Resource not found with provided criteria (locale=en-us, id=12345)",
+      |		"detail": "Resource not found with provided criteria (locale=en-us, id=abcde)",
       |		"status": "404",
       |		"_links": {
       |			"about": {

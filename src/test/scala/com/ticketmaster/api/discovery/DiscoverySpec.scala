@@ -4,14 +4,14 @@ import org.scalatest.{FlatSpec, Matchers}
 
 import scala.language.postfixOps
 
-class DiscoveryApiSpec extends FlatSpec with Matchers {
+class DiscoverySpec extends FlatSpec with Matchers {
 
   val apiKey = "12345"
 
-  behavior of "discovery API"
+  behavior of "discovery client"
 
-  it should "create discovery api client" in {
-    val api = DiscoveryApi(apiKey)
+  it should "create discovery client" in {
+    val api = Discovery(apiKey)
     api.apiKey should be(apiKey)
   }
 }

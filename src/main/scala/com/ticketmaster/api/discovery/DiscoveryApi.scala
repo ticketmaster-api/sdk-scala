@@ -3,15 +3,13 @@ package com.ticketmaster.api.discovery
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-import com.ticketmaster.api.discovery.domain._
 import com.ticketmaster.api.discovery.Filter.NoFilter
+import com.ticketmaster.api.discovery.domain._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 trait DiscoveryApi {
-  val ROOT_URL = "https://app.ticketmaster.com/discovery/v2"
-  val USER_AGENT = "Ticketmaster Discovery Scala"
 
   def searchEvents(searchEventsRequest: SearchEventsRequest = SearchEventsRequest())(implicit ec: ExecutionContext): Future[PageResponse[Events]]
 
@@ -30,10 +28,6 @@ trait DiscoveryApi {
   def searchClassifications(searchClassificationsRequest: SearchClassificationsRequest = SearchClassificationsRequest())(implicit ec: ExecutionContext): Future[PageResponse[Classifications]]
 
   def getClassification(getClassificationRequest: GetClassificationRequest)(implicit ec: ExecutionContext): Future[Response[Classification]]
-}
-
-object DiscoveryApi {
-  def apply(apiKey: String) = new DefaultDiscoveryApi(apiKey)
 }
 
 sealed trait Filter[+T] {
@@ -62,18 +56,16 @@ object Filter {
 
   implicit def dateTimeToValue[T](t: ZonedDateTime) = Filtered(t)
 
-  implicit def queryParamsToStrings(queryParamMap: Map[String, Filter[_]]): Traversable[(String, String)] = {
-    def toQueryParamValue(m: (String, Filtered[_])): (String, String) = {
-      (m._1, m._2.value match {
-        case z: ZonedDateTime => z.format(DateTimeFormatter.ISO_INSTANT)
-        case s: Seq[_] => s.mkString(",")
-        case a => a.toString
-      })
+  implicit def stringifyQueryParams(queryParamMap: Map[String, Filter[_]]): Map[String, String] = {
+    val stringify: PartialFunction[Any, String] = {
+      case z: ZonedDateTime => z.format(DateTimeFormatter.ISO_INSTANT)
+      case s: Seq[_] => s.mkString(",")
+      case a => a.toString
     }
 
-    queryParamMap.filter { f: (String, Filter[_]) => f._2.isDefined }.map(g => toQueryParamValue(g._1, g._2.asInstanceOf[Filtered[_]]))
+    queryParamMap.filter { f: (String, Filter[_]) => f._2.isDefined }
+      .map(d => (d._1, stringify(d._2.value)))
   }
-
 }
 
 //todo may want to generalise requests - by id and by page
@@ -166,7 +158,6 @@ case class SearchClassificationsRequest(keyword: Filter[String] = NoFilter,
 
 case class GetClassificationRequest(id: String,
                                     locale: Filter[String] = NoFilter)
-
 
 
 case class SearchEventsResponse(pageResult: PageResult[Events],

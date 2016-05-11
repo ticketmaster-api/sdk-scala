@@ -4,24 +4,31 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 
 import argonaut.Argonaut._
 import argonaut._
-import com.ning.http.client.{Response => NingResponse}
+import com.ticketmaster.api.discovery.Filter._
 import com.ticketmaster.api.discovery.domain.{Segment => CSegment, _}
-import com.ticketmaster.api.discovery.Filter.Filtered
-import dispatch._
+import com.ticketmaster.api.discovery.http.{DispatchHttp, Http}
+import com.ticketmaster.api.discovery.http.protocol.{HttpRequest, HttpResponse}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure, Success}
 
-
-private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecutor = Http) extends DiscoveryApi {
+trait HttpDiscoveryApi extends DiscoveryApi {
 
   val LOGGER = LoggerFactory.getLogger(getClass)
 
+  val ROOT_URL = "https://app.ticketmaster.com/discovery/v2"
+
+  val USER_AGENT = "Ticketmaster Discovery Scala"
+
   val okRange = 200 to 299
 
+  val apiKey: String
+
+  def http: Http = new DispatchHttp
+
   override def searchEvents(searchEventsRequest: SearchEventsRequest)(implicit ec: ExecutionContext): Future[PageResponse[Events]] = {
-    val queryParams = Map[String, Filtered[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("keyword", searchEventsRequest.keyword)
       .updated("attractionId", searchEventsRequest.attractionId)
       .updated("deviceId", searchEventsRequest.deviceId)
@@ -42,107 +49,106 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
       .updated("includeTBD", searchEventsRequest.includeTbd)
       .updated("includeTBA", searchEventsRequest.includeTba)
 
-    val req = url(ROOT_URL) / "events.json" <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "events.json"
 
-    handle(req, response => SearchEventsResponse(decode[PageResult[Events]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchEventsResponse(decode[PageResult[Events]](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def getEvent(getEventRequest: GetEventRequest)(implicit ec: ExecutionContext): Future[Response[Event]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("locale", getEventRequest.locale)
 
-    val req = url(ROOT_URL) / "events" / (getEventRequest.id + ".json") <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "events" / (getEventRequest.id + ".json")
 
-    handle(req, response => GetEventResponse(decode[Event](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => GetEventResponse(decode[Event](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def getEventImages(getEventImagesRequest: GetEventImagesRequest)(implicit ec: ExecutionContext): dispatch.Future[Response[EventImages]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("locale", getEventImagesRequest.locale)
 
-    val req = url(ROOT_URL) / "events" / (getEventImagesRequest.id) / "images.json" <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "events" / getEventImagesRequest.id / "images.json"
 
-    handle(req, response => GetEventImagesResponse(decode[EventImages](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => GetEventImagesResponse(decode[EventImages](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def searchAttractions(searchAttractionsRequest: SearchAttractionsRequest)(implicit ec: ExecutionContext): dispatch.Future[PageResponse[Attractions]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("keyword", searchAttractionsRequest.keyword)
       .updated("locale", searchAttractionsRequest.locale)
       .updated("page", searchAttractionsRequest.page)
       .updated("size", searchAttractionsRequest.size)
       .updated("sort", searchAttractionsRequest.sort)
 
-    val req = url(ROOT_URL) / "attractions.json" <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "attractions.json"
 
-    handle(req, response => SearchAttractionsResponse(decode[PageResult[Attractions]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchAttractionsResponse(decode[PageResult[Attractions]](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def getAttraction(getAttractionRequest: GetAttractionRequest)(implicit ec: ExecutionContext): Future[GetAttractionResponse] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("locale", getAttractionRequest.locale)
 
-    val req = url(ROOT_URL) / "attractions" / (getAttractionRequest.id + ".json") <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "attractions" / (getAttractionRequest.id + ".json")
 
-    handle(req, response => GetAttractionResponse(decode[Attraction](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => GetAttractionResponse(decode[Attraction](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def searchVenues(searchVenuesRequest: SearchVenuesRequest)(implicit ec: ExecutionContext): dispatch.Future[PageResponse[Venues]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("keyword", searchVenuesRequest.keyword)
       .updated("locale", searchVenuesRequest.locale)
       .updated("page", searchVenuesRequest.page)
       .updated("size", searchVenuesRequest.size)
       .updated("sort", searchVenuesRequest.sort)
 
-    val req = url(ROOT_URL) / "venues.json" <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "venues.json"
 
-    handle(req, response => SearchVenuesResponse(decode[PageResult[Venues]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchVenuesResponse(decode[PageResult[Venues]](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def getVenue(getVenueRequest: GetVenueRequest)(implicit ec: ExecutionContext): dispatch.Future[Response[Venue]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("locale", getVenueRequest.locale)
 
-    val req = url(ROOT_URL) / "venues" / (getVenueRequest.id + ".json") <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "venues" / (getVenueRequest.id + ".json")
 
-    handle(req, response => GetVenueResponse(decode[Venue](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => GetVenueResponse(decode[Venue](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def searchClassifications(searchClassificationsRequest: SearchClassificationsRequest)(implicit ec: ExecutionContext): dispatch.Future[PageResponse[Classifications]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("keyword", searchClassificationsRequest.keyword)
       .updated("page", searchClassificationsRequest.page)
       .updated("size", searchClassificationsRequest.size)
       .updated("sort", searchClassificationsRequest.sort)
 
-    val req = url(ROOT_URL) / "classifications.json" <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "classifications.json"
 
-    handle(req, response => SearchClassificationsResponse(decode[PageResult[Classifications]](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => SearchClassificationsResponse(decode[PageResult[Classifications]](response.body.get), extractRateLimitInfo(response)))
   }
 
   override def getClassification(getClassificationRequest: GetClassificationRequest)(implicit ec: ExecutionContext): dispatch.Future[Response[Classification]] = {
-    val queryParams = Map[String, Filter[_]]()
+    val filters = Map[String, Filter[_]]()
       .updated("locale", getClassificationRequest.locale)
 
-    val req = url(ROOT_URL) / "classifications" / (getClassificationRequest.id + ".json") <<? queryParams
+    val req = HttpRequest(root = ROOT_URL, queryParams = filters) / "classifications" / (getClassificationRequest.id + ".json")
 
-    handle(req, response => GetClassificationResponse(decode[Classification](response.getResponseBody), extractRateLimitInfo(response)))
+    handle(req, response => GetClassificationResponse(decode[Classification](response.body.get), extractRateLimitInfo(response)))
   }
 
-  //todo maybe extract this and make generic so can switch out dispatch
-  private def handle[T](req: Req, handler: NingResponse => T)(implicit ec: ExecutionContext) = {
-    LOGGER.debug(s"Request: ${req.url}")
+  private def handle[T](req: HttpRequest, handler: HttpResponse => T)(implicit ec: ExecutionContext) = {
+
+    LOGGER.debug(s"Request: ${req}")
 
     http(req
       .addQueryParameter("apikey", apiKey)
-      .addHeader("User-Agent", s"${USER_AGENT}/${build.Info.version}"))
-      .map {
-        respond(_, handler)
-      }
+      .addHeader("User-Agent", s"${USER_AGENT}/${build.Info.version}")
+    ).map(res => respond(res, handler))
   }
 
-  private def respond[T](response: NingResponse, handler: NingResponse => T) = {
+  // based on status code either execute handler or handle error
+  private def respond[T](response: HttpResponse, handler: HttpResponse => T) = {
     def extractMessage = {
       def extractDetail(json: Json): Option[Cursor] = {
         val maybeDetail = for {
@@ -152,26 +158,26 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
         } yield detail
         maybeDetail
       }
-      val body = response.getResponseBody
+      val body = response.body.get
       Parse.parse(body).fold(
         err => s"Failed to parse response: ${err}",
         json => extractDetail(json).fold(s"Failed to find error details: ${json}")(_.focus.stringOr(body))
       )
     }
 
-    response.getStatusCode match {
+    response.status match {
       case c if okRange contains c => handler(response)
       case 404 => throw new ResourceNotFoundException(extractMessage)
       case _ => throw ApiException(extractMessage)
     }
   }
 
-  private def extractRateLimitInfo(response: NingResponse) = {
+  private def extractRateLimitInfo(response: HttpResponse) = {
     RateLimits(
-      response.getHeader("Rate-Limit").toInt,
-      response.getHeader("Rate-Limit-Available").toInt,
-      response.getHeader("Rate-Limit-Over").toInt,
-      ZonedDateTime.ofInstant(Instant.ofEpochMilli(response.getHeader("Rate-Limit-Reset").toLong), ZoneId.of("UTC")))
+      response.headers("Rate-Limit").toInt,
+      response.headers("Rate-Limit-Available").toInt,
+      response.headers("Rate-Limit-Over").toInt,
+      ZonedDateTime.ofInstant(Instant.ofEpochMilli(response.headers("Rate-Limit-Reset").toLong), ZoneId.of("UTC")))
   }
 
   //todo maybe extract this and make generic so can switch out argonaut - split this out into another class
@@ -181,8 +187,6 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
       case Failure(e) => throw ApiException(s"$e in $json")
     }
   }
-
-  def shutdown = http.shutdown
 
   implicit def SearchEventsResultCodec: CodecJson[PageResult[Events]] = casecodec3(PageResult.apply[Events], PageResult.unapply[Events])("_embedded", "page", "_links")
 
@@ -235,4 +239,5 @@ private[discovery] class DefaultDiscoveryApi(val apiKey: String, http: HttpExecu
   implicit def LinkCodec: CodecJson[Link] = casecodec2(Link.apply, Link.unapply)("href", "templated")
 
   implicit def PageCodec: CodecJson[Page] = casecodec4(Page.apply, Page.unapply)("size", "totalElements", "totalPages", "number")
+
 }

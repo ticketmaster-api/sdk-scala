@@ -3,17 +3,18 @@ package com.ticketmaster.api.discovery
 import java.time.ZonedDateTime
 
 import com.ticketmaster.api.discovery.domain._
+import com.ticketmaster.api.discovery.http.protocol.{HttpResponse, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class AttractionsSpec extends ApiSpec with HttpDsl {
+class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
 
   override implicit val patienceConfig = PatienceConfig(2 seconds, 200 millis)
 
-  val apiKey = "12345"
+  val testApiKey = "12345"
 
   val responseHeaders = Map("Rate-Limit" -> "5000",
     "Rate-Limit-Available" -> "5000",
@@ -23,14 +24,10 @@ class AttractionsSpec extends ApiSpec with HttpDsl {
   behavior of "discovery attraction API"
 
   it should "search for an attraction by keyword" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/attractions.json?keyword=coachella&apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("keyword" -> "coachella", "apikey" -> testApiKey)) / "attractions.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(AttractionsSpec.searchAttractionsResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody AttractionsSpec.searchAttractionsResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[PageResponse[Attractions]] = api.searchAttractions(SearchAttractionsRequest(keyword = "coachella"))
 
     whenReady(pendingResponse) { r =>
@@ -43,14 +40,10 @@ class AttractionsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "get an attraction" in {
-    val expectedUrl = s"https://app.ticketmaster.com/discovery/v2/attractions/K8vZ9171q60.json?apikey=${apiKey}"
-    val request = requestMatcher(expectedUrl)
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "attractions" / "K8vZ9171q60.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(AttractionsSpec.getAttractionResponse))
+    val api = testableApi(expectedRequest, response)
 
-    val response = mockResponse withStatus 200 withHeaders responseHeaders withBody AttractionsSpec.getAttractionResponse
-
-    val http = mockHttp expects request returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
     val pendingResponse: Future[Response[Attraction]] = api.getAttraction(GetAttractionRequest("K8vZ9171q60"))
 
     whenReady(pendingResponse) { r =>
@@ -59,16 +52,15 @@ class AttractionsSpec extends ApiSpec with HttpDsl {
   }
 
   it should "throw exception if attraction not found" in {
-    val response = mockResponse withStatus 404 withBody AttractionsSpec.error404
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "attractions" / "abcde.json"
+    val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(AttractionsSpec.error404))
+    val api = testableApi(expectedRequest, response)
 
-    val http = mockHttp expects anything returns response
-
-    val api = new DefaultDiscoveryApi(apiKey, http)
-    val pendingResponse: Future[Response[Attraction]] = api.getAttraction(GetAttractionRequest("12345"))
+    val pendingResponse: Future[Response[Attraction]] = api.getAttraction(GetAttractionRequest("abcde"))
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ResourceNotFoundException]
-      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=12345)")
+      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=abcde)")
     }
   }
 }
@@ -184,7 +176,7 @@ object AttractionsSpec {
       |{
       |	"errors": [{
       |		"code": "DIS1004",
-      |		"detail": "Resource not found with provided criteria (locale=en-us, id=12345)",
+      |		"detail": "Resource not found with provided criteria (locale=en-us, id=abcde)",
       |		"status": "404",
       |		"_links": {
       |			"about": {
