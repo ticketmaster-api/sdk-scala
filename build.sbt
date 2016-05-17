@@ -13,6 +13,7 @@ conflictManager := ConflictManager.strict
 libraryDependencies ++= Seq(
   "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
   "io.argonaut" %% "argonaut" % "6.1",
+  "com.github.alexarchambault" %% "argonaut-shapeless_6.1" % "0.3.1",
   "org.slf4j" % "slf4j-api" % "1.7.5",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"

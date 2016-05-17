@@ -31,10 +31,10 @@ class ClassificationsSpec extends BaseSpec with TestableDiscoveryApi {
     val pendingResponse: Future[PageResponse[Classifications]] = api.searchClassifications(SearchClassificationsRequest())
 
     whenReady(pendingResponse) { r =>
-      r.pageResult.result.classifications.size should be(6)
-      r.pageResult.result.classifications.head.segment.name should be("Arts & Theatre")
+      r.pageResult._embedded.classifications.size should be(6)
+      r.pageResult._embedded.classifications.head.segment.name should be("Arts & Theatre")
       r.pageResult.page should be(Page(20, 6, 1, 0))
-      r.pageResult.links.self should be(Link("/discovery/v2/classifications.json{?page,size,sort}", Some(true)))
+      r.pageResult._links.self should be(Link("/discovery/v2/classifications.json{?page,size,sort}", Some(true)))
       r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }

@@ -31,10 +31,10 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
     val pendingResponse: Future[PageResponse[Venues]] = api.searchVenues(SearchVenuesRequest(keyword = "candlestick"))
 
     whenReady(pendingResponse) { r =>
-      r.pageResult.result.venues.size should be(2)
-      r.pageResult.result.venues.head.name should be("Candlestick Park")
+      r.pageResult._embedded.venues.size should be(2)
+      r.pageResult._embedded.venues.head.name should be("Candlestick Park")
       r.pageResult.page should be(Page(20, 2, 1, 0))
-      r.pageResult.links.self should be(Link("/discovery/v2/venues.json{?page,size,sort}", Some(true)))
+      r.pageResult._links.self should be(Link("/discovery/v2/venues.json{?page,size,sort}", Some(true)))
       r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }

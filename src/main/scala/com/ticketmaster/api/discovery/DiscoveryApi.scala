@@ -92,7 +92,7 @@ case class Link(href: String, templated: Option[Boolean])
 case class Links(self: Link)
 
 //todo this could be a stream, stream iterator
-case class PageResult[T](result: T, page: Page, links: Links)
+case class PageResult[T](_embedded: T, page: Page, _links: Links)
 
 trait Response[T] {
   def result: T

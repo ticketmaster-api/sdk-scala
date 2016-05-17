@@ -32,10 +32,10 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
     val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(SearchEventsRequest(keyword = "coachella"))
 
     whenReady(pendingResponse) { r =>
-      r.pageResult.result.events.size should be(1)
-      r.pageResult.result.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
+      r.pageResult._embedded.events.size should be(1)
+      r.pageResult._embedded.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
       r.pageResult.page should be(Page(20, 1, 1, 0))
-      r.pageResult.links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
+      r.pageResult._links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
       r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
@@ -49,10 +49,10 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
     val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(searchEventsRequest)
 
     whenReady(pendingResponse) { r =>
-      r.pageResult.result.events.size should be(1)
-      r.pageResult.result.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
+      r.pageResult._embedded.events.size should be(1)
+      r.pageResult._embedded.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
       r.pageResult.page should be(Page(20, 1, 1, 0))
-      r.pageResult.links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
+      r.pageResult._links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
       r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
@@ -65,7 +65,7 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
     val pendingResponse: Future[Response[EventImages]] = api.getEventImages(GetEventImagesRequest("k7vGFfdS_Gp6G"))
 
     whenReady(pendingResponse) { r =>
-      r.result.imageType should be("event")
+      r.result.`type` should be("event")
       r.result.id should be("k7vGFfdS_Gp6G")
       r.result.images should have length (10)
     }
