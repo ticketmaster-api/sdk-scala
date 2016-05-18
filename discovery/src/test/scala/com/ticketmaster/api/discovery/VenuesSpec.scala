@@ -3,7 +3,7 @@ package com.ticketmaster.api.discovery
 import java.time.ZonedDateTime
 
 import com.ticketmaster.api.discovery.domain._
-import com.ticketmaster.api.discovery.http.protocol.{HttpResponse, HttpRequest}
+import com.ticketmaster.api.http.protocol.{HttpRequest, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

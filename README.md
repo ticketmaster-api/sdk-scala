@@ -1,6 +1,6 @@
-# Ticketmaster API: Discovery Scala SDK
+# Ticketmaster API: SDK for Scala
 
-For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
+For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports Discovery [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
 
 ## Create API client
 

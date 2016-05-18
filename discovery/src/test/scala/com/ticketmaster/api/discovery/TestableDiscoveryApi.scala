@@ -1,11 +1,11 @@
 package com.ticketmaster.api.discovery
 
-import com.ticketmaster.api.discovery.http.Http
-import com.ticketmaster.api.discovery.http.protocol.{HttpResponse, HttpRequest}
+import com.ticketmaster.api.http.Http
+import com.ticketmaster.api.http.protocol.{HttpResponse, HttpRequest}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.Suite
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 trait TestableDiscoveryApi extends MockFactory {
   this: Suite =>
@@ -19,7 +19,7 @@ trait TestableDiscoveryApi extends MockFactory {
       override def http: Http = {
         val mockHttp = mock[Http]
         (mockHttp.apply(_: HttpRequest)(_: ExecutionContext))
-          .expects(expectedRequest.addHeader("User-Agent", "Ticketmaster Discovery Scala/0.1-SNAPSHOT"), *)
+          .expects(expectedRequest.addHeader("User-Agent", "Ticketmaster Discovery Scala/0.1.0-SNAPSHOT"), *)
           .returning(Future.successful(response))
         mockHttp
       }

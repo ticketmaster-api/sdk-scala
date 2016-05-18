@@ -1,6 +1,6 @@
 package com.ticketmaster.api.discovery
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{Matchers, FlatSpec}
 
 import scala.language.postfixOps
 

@@ -1,6 +1,6 @@
-# Ticketmaster API: Discovery Scala SDK
+# Ticketmaster API: SDK for Scala
 
-For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
+For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports Discovery [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
 
 ## Create API client
 
@@ -46,7 +46,7 @@ The default http client is [dispatch](https://github.com/dispatch/reboot). It is
 
 ## Wish list
 
-* Allow pluggable json parser. Currently using [argonaut](argonaut.io) but likely to move to [rapture](https://github.com/propensive/rapture/blob/dev/doc/json.md).
+* Allow pluggable json parser. Currently using [argonaut](argonaut.io).
 * Turn search results into a stream/iterator.
 
 ## Build notes

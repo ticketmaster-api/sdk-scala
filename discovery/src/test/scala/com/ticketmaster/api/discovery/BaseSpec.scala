@@ -1,8 +1,5 @@
 package com.ticketmaster.api.discovery
 
-import java.net.{URL => JavaUrl}
-
-import com.ning.http.client.{Response => NingResponse}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers, Suite}

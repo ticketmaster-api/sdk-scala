@@ -1,6 +1,6 @@
-package com.ticketmaster.api.discovery.http
+package com.ticketmaster.api.http
 
-import com.ticketmaster.api.discovery.http.protocol._
+import com.ticketmaster.api.http.protocol._
 
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConverters.mapAsScalaMapConverter

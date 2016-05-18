@@ -3,7 +3,7 @@ package com.ticketmaster.api.discovery
 import java.time.{Clock, Instant, ZoneId, ZonedDateTime}
 
 import com.ticketmaster.api.discovery.domain._
-import com.ticketmaster.api.discovery.http.protocol.{HttpRequest, HttpResponse}
+import com.ticketmaster.api.http.protocol.{HttpResponse, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -80,6 +80,18 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
 
     whenReady(pendingResponse) { r =>
       r.result.id should be("1AtZAvvGkdzqJ-n")
+    }
+  }
+
+  it should "get an event with no start date" in {
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "G5v7ZKMqTqPKB.json"
+    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.getEventResponseNoSalesDates))
+    val api = testableApi(expectedRequest, response)
+
+    val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("G5v7ZKMqTqPKB"))
+
+    whenReady(pendingResponse) { r =>
+      r.result.id should be("G5v7ZKMqTqPKB")
     }
   }
 
@@ -512,6 +524,168 @@ object EventsSpec {
       |			"_links": {
       |				"self": {
       |					"href": "/discovery/v2/venues/KovZpZAFJ71A?locale=en-us"
+      |				}
+      |			}
+      |		}]
+      |	}
+      |}
+    """.stripMargin
+
+  val getEventResponseNoSalesDates =
+    """
+      |{
+      |	"name": "City and Colour VIP Experience Upgrade",
+      |	"type": "event",
+      |	"id": "G5v7ZKMqTqPKB",
+      |	"test": false,
+      |	"url": "http://ticketmaster.ca/event/11004F777F7654FA",
+      |	"locale": "en-us",
+      |	"images": [{
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_RECOMENDATION_16_9.jpg",
+      |		"width": 100,
+      |		"height": 56,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_RETINA_PORTRAIT_16_9.jpg",
+      |		"width": 640,
+      |		"height": 360,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "3_2",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_RETINA_PORTRAIT_3_2.jpg",
+      |		"width": 640,
+      |		"height": 427,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dbimages/229719a.jpg",
+      |		"width": 205,
+      |		"height": 115,
+      |		"fallback": false
+      |	}, {
+      |		"ratio": "3_2",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_ARTIST_PAGE_3_2.jpg",
+      |		"width": 305,
+      |		"height": 203,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_TABLET_LANDSCAPE_16_9.jpg",
+      |		"width": 1024,
+      |		"height": 576,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_RETINA_LANDSCAPE_16_9.jpg",
+      |		"width": 1136,
+      |		"height": 639,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "4_3",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_CUSTOM.jpg",
+      |		"width": 305,
+      |		"height": 225,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_TABLET_LANDSCAPE_LARGE_16_9.jpg",
+      |		"width": 2048,
+      |		"height": 1152,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "3_2",
+      |		"url": "http://s1.ticketm.net/dam/c/MISC_TABLET_LANDSCAPE_3_2.jpg",
+      |		"width": 1024,
+      |		"height": 683,
+      |		"fallback": true
+      |	}],
+      |	"sales": {
+      |		"public": {
+      |			"startTBD": false
+      |		}
+      |	},
+      |	"dates": {
+      |		"start": {
+      |			"localDate": "2016-06-06",
+      |			"localTime": "19:30:00",
+      |			"dateTime": "2016-06-07T01:30:00Z",
+      |			"dateTBD": false,
+      |			"dateTBA": false,
+      |			"timeTBA": false,
+      |			"noSpecificTime": false
+      |		},
+      |		"timezone": "America/Denver",
+      |		"status": {
+      |			"code": "offsale"
+      |		}
+      |	},
+      |	"classifications": [{
+      |		"primary": true,
+      |		"segment": {
+      |			"id": "KZFzniwnSyZfZ7v7n1",
+      |			"name": "Miscellaneous"
+      |		},
+      |		"genre": {
+      |			"id": "KnvZfZ7v7ll",
+      |			"name": "Undefined"
+      |		},
+      |		"subGenre": {
+      |			"id": "KZazBEonSMnZfZ7vAv1",
+      |			"name": "Undefined"
+      |		}
+      |	}],
+      |	"promoter": {
+      |		"id": "494"
+      |	},
+      |	"_links": {
+      |		"self": {
+      |			"href": "/discovery/v2/events/G5v7ZKMqTqPKB?locale=en-us"
+      |		},
+      |		"venues": [{
+      |			"href": "/discovery/v2/venues/KovZpZAFFlkA?locale=en-us"
+      |		}]
+      |	},
+      |	"_embedded": {
+      |		"venues": [{
+      |			"name": "ENMAX Centrium",
+      |			"type": "venue",
+      |			"id": "KovZpZAFFlkA",
+      |			"test": false,
+      |			"url": "http://ticketmaster.ca/venue/139380",
+      |			"locale": "en-us",
+      |			"postalCode": "T4R 2N7",
+      |			"timezone": "America/Denver",
+      |			"city": {
+      |				"name": "Red Deer"
+      |			},
+      |			"state": {
+      |				"name": "Alberta",
+      |				"stateCode": "AB"
+      |			},
+      |			"country": {
+      |				"name": "Canada",
+      |				"countryCode": "CA"
+      |			},
+      |			"address": {
+      |				"line1": "4847b 19th St."
+      |			},
+      |			"location": {
+      |				"longitude": "-113.80353040",
+      |				"latitude": "52.22900420"
+      |			},
+      |			"markets": [{
+      |				"id": "107"
+      |			}],
+      |			"dmas": [{
+      |				"id": 506
+      |			}, {
+      |				"id": 523
+      |			}],
+      |			"_links": {
+      |				"self": {
+      |					"href": "/discovery/v2/venues/KovZpZAFFlkA?locale=en-us"
       |				}
       |			}
       |		}]
