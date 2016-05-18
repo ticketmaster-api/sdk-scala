@@ -46,7 +46,7 @@ The default http client is [dispatch](https://github.com/dispatch/reboot). It is
 
 ## Wish list
 
-* Allow pluggable json parser. Currently using [argonaut](argonaut.io) but likely to move to [rapture](https://github.com/propensive/rapture/blob/dev/doc/json.md).
+* Allow pluggable json parser. Currently using [argonaut](argonaut.io).
 * Turn search results into a stream/iterator.
 
 ## Build notes
