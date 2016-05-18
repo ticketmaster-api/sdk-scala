@@ -12,11 +12,11 @@ object domain {
                    sales: Sales,
                    dates: Dates,
                    test: Boolean,
-                   eventType: String,
+                   `type`: String,
                    images: Seq[Image],
                    classifications: Option[Seq[EventClassification]])
 
-  case class EventImages(imageType: String,
+  case class EventImages(`type`: String,
                          id: String,
                          images: Seq[Image])
 
@@ -48,7 +48,7 @@ object domain {
   case class Date(dateTime: Option[String],
                   localDate: String,
                   localTime: Option[String],
-                  dateTDB: Boolean,
+                  dateTBD: Boolean,
                   dateTBA: Boolean,
                   timeTBA: Boolean,
                   noSpecificTime: Boolean)

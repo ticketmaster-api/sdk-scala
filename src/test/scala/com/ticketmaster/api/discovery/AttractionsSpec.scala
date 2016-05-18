@@ -31,10 +31,10 @@ class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
     val pendingResponse: Future[PageResponse[Attractions]] = api.searchAttractions(SearchAttractionsRequest(keyword = "coachella"))
 
     whenReady(pendingResponse) { r =>
-      r.pageResult.result.attractions.size should be(1)
-      r.pageResult.result.attractions.head.name should be("Coachella Valley Music and Arts Festival")
+      r.pageResult._embedded.attractions.size should be(1)
+      r.pageResult._embedded.attractions.head.name should be("Coachella Valley Music and Arts Festival")
       r.pageResult.page should be(Page(20, 1, 1, 0))
-      r.pageResult.links.self should be(Link("/discovery/v2/attractions.json{?page,size,sort}", Some(true)))
+      r.pageResult._links.self should be(Link("/discovery/v2/attractions.json{?page,size,sort}", Some(true)))
       r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
