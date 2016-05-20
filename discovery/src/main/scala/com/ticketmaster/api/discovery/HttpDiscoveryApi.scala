@@ -15,7 +15,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure, Success}
 
 trait HttpDiscoveryApi extends DiscoveryApi {
-
   val LOGGER = LoggerFactory.getLogger(getClass)
 
   val ROOT_URL = "https://app.ticketmaster.com/discovery/v2"

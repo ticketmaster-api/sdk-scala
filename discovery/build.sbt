@@ -1,7 +1,6 @@
 name := """discovery-scala"""
 
 libraryDependencies ++= Seq(
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
   "com.github.alexarchambault" %% "argonaut-shapeless_6.1" % "1.0.0-M1",
   "org.slf4j" % "slf4j-api" % "1.7.5",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",

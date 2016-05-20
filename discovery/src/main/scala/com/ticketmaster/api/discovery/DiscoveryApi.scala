@@ -10,7 +10,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 trait DiscoveryApi {
-
   def searchEvents(searchEventsRequest: SearchEventsRequest = SearchEventsRequest())(implicit ec: ExecutionContext): Future[PageResponse[Events]]
 
   def getEvent(getEventRequest: GetEventRequest)(implicit ec: ExecutionContext): Future[Response[Event]]
@@ -37,7 +36,6 @@ sealed trait Filter[+T] {
 }
 
 object Filter {
-
   final case object NoFilter extends Filter[Nothing] {
     override def isDefined: Boolean = false
 

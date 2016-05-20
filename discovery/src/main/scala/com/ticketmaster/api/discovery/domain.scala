@@ -1,7 +1,6 @@
 package com.ticketmaster.api.discovery
 
 object domain {
-
   case class Events(events: Seq[Event])
 
   case class Event(id: String,
@@ -67,5 +66,4 @@ object domain {
 
   case class Segment(id: String,
                      name: String)
-
 }
