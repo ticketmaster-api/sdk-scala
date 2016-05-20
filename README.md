@@ -1,4 +1,4 @@
-# Ticketmaster API: SDK for Scala
+# Ticketmaster API: SDK for Scala [![Build Status](https://travis-ci.org/ticketmaster-api/sdk-scala.svg?branch=master)](https://travis-ci.org/ticketmaster-api/sdk-scala)
 
 For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports Discovery [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
 
