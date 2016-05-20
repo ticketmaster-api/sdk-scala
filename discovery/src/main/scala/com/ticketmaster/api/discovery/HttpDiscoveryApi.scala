@@ -7,8 +7,8 @@ import argonaut.Shapeless._
 import argonaut._
 import com.ticketmaster.api.discovery.Filter._
 import com.ticketmaster.api.discovery.domain._
-import com.ticketmaster.api.discovery.http.protocol.{HttpRequest, HttpResponse}
-import com.ticketmaster.api.discovery.http.{DispatchHttp, Http}
+import com.ticketmaster.api.http.protocol.{HttpRequest, HttpResponse}
+import com.ticketmaster.api.http.{DispatchHttp, Http}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}

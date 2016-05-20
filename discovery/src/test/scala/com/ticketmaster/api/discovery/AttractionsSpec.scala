@@ -3,12 +3,11 @@ package com.ticketmaster.api.discovery
 import java.time.ZonedDateTime
 
 import com.ticketmaster.api.discovery.domain._
-import com.ticketmaster.api.discovery.http.protocol.{HttpResponse, HttpRequest}
+import com.ticketmaster.api.http.protocol.{HttpResponse, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
 
