@@ -2,8 +2,6 @@ package com.ticketmaster.api.discovery
 
 import org.scalatest.{Matchers, FlatSpec}
 
-import scala.language.postfixOps
-
 class DiscoverySpec extends FlatSpec with Matchers {
 
   val apiKey = "12345"

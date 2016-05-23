@@ -1,8 +1,6 @@
-import java.io.File
-
 import Dependencies._
 import sbt.Keys._
-import sbt.{Build, ConflictManager, Path, Resolver, _}
+import sbt.{Build, ConflictManager, _}
 import sbtrelease.ReleasePlugin.autoImport._
 import tut.Plugin._
 
@@ -13,7 +11,8 @@ object SdkBuild extends Build {
     scalacOptions ++= Seq(
       "-feature",
       "-Xfatal-warnings",
-      "-language:postfixOps"),
+      "-language:postfixOps",
+      "-language:implicitConversions"),
     conflictManager := ConflictManager.strict,
     dependencyOverrides ++= depOverrides,
     publishTo := Some(Resolver.file("file", new File(Path.userHome.absolutePath + "/.m2/repository")))
@@ -33,20 +32,14 @@ object SdkBuild extends Build {
         tutted
       }
     )
-    .dependsOn(discovery)
-    .aggregate(discovery)
+    .dependsOn(discovery, commerce)
+    .aggregate(discovery, commerce)
 
   lazy val core = project
     .settings(commonSettings: _*)
     .settings(
       name := """core-scala""",
-      libraryDependencies ++= coreDeps)
-
-  lazy val discovery = project
-    .settings(commonSettings: _*)
-    .settings(
-      name := """discovery-scala""",
-      libraryDependencies ++= discoveryDeps,
+      libraryDependencies ++= coreDeps,
       sourceGenerators in Compile += Def.task {
         val file = (sourceManaged in Compile).value / "build" / "Info.scala"
         IO.write(file,
@@ -59,6 +52,21 @@ object SdkBuild extends Build {
           """.stripMargin)
         Seq(file)
       }.taskValue)
+
+  lazy val discovery = project
+    .settings(commonSettings: _*)
+    .settings(
+      name := """discovery-scala""",
+      libraryDependencies ++= discoveryDeps)
+    .dependsOn(core)
+    .aggregate(core)
+
+  lazy val commerce = project
+    .settings(commonSettings: _*)
+    .settings(
+      name := """commerce-scala""",
+      libraryDependencies ++= commerceDeps
+    )
     .dependsOn(core)
     .aggregate(core)
 }

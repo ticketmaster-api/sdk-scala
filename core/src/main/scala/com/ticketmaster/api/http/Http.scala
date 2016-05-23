@@ -1,14 +1,15 @@
 package com.ticketmaster.api.http
 
 import com.ticketmaster.api.http.protocol._
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.concurrent.{ExecutionContext, Future}
 
+
 object protocol {
   case class HttpRequest(root: String, path: Seq[String] = Seq.empty, queryParams: Map[String, String] = Map.empty, headers: Map[String, String] = Map.empty, body: Option[String] = None) {
-
     def addPathSegment(segment: String) = copy(path = path :+ segment)
 
     def /(segment: String) = addPathSegment(segment)
@@ -26,6 +27,8 @@ trait Http {
 }
 
 class DispatchHttp extends Http {
+  val LOGGER = LoggerFactory.getLogger(getClass)
+
   override def apply(request: HttpRequest)(implicit ec: ExecutionContext): Future[HttpResponse] = {
     import dispatch._
 
@@ -36,11 +39,15 @@ class DispatchHttp extends Http {
       }
     }
 
+    LOGGER.debug(s"Request: ${request}")
+
     val req = addPath(url(request.root), request.path).setHeaders(request.headers.map(h => ((h._1, Seq(h._2))))) <<? request.queryParams
 
     Http(req).map(res => {
       val responseHeaders = res.getHeaders.asScala.mapValues(jl => jl.head).toMap
-      HttpResponse(status = res.getStatusCode, headers = responseHeaders, body = Some(res.getResponseBody))
+      val response = HttpResponse(status = res.getStatusCode, headers = responseHeaders, body = Some(res.getResponseBody))
+      LOGGER.debug(s"Response: ${response}")
+      response
     })
   }
 }

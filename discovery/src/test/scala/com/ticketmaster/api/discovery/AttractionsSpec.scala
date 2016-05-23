@@ -2,8 +2,10 @@ package com.ticketmaster.api.discovery
 
 import java.time.ZonedDateTime
 
+import com.ticketmaster.api.Api._
 import com.ticketmaster.api.discovery.domain._
-import com.ticketmaster.api.http.protocol.{HttpResponse, HttpRequest}
+import com.ticketmaster.api.http.protocol.{HttpRequest, HttpResponse}
+import com.ticketmaster.api.test.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -59,7 +61,7 @@ class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ResourceNotFoundException]
-      t.getMessage should be("Resource not found with provided criteria (locale=en-us, id=abcde)")
+      t.getMessage should be("Errors(Vector(Error(DIS1004,Resource not found with provided criteria (locale=en-us, id=abcde),404)))")
     }
   }
 }
