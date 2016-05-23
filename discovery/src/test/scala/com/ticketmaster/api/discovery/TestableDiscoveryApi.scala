@@ -19,7 +19,7 @@ trait TestableDiscoveryApi extends MockFactory {
       override def http: Http = {
         val mockHttp = mock[Http]
         (mockHttp.apply(_: HttpRequest)(_: ExecutionContext))
-          .expects(expectedRequest.addHeader("User-Agent", "Ticketmaster Discovery Scala/0.1.0-SNAPSHOT"), *)
+          .expects(expectedRequest.addHeader(s"User-Agent", s"Ticketmaster Discovery Scala/${build.Info.version}"), *)
           .returning(Future.successful(response))
         mockHttp
       }
