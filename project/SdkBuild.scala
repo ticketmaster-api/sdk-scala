@@ -3,6 +3,7 @@ import sbt.Keys._
 import sbt.{Build, ConflictManager, _}
 import sbtrelease.ReleasePlugin.autoImport._
 import tut.Plugin._
+import bintray.BintrayKeys._
 
 object SdkBuild extends Build {
   lazy val commonSettings = Seq(
@@ -14,14 +15,27 @@ object SdkBuild extends Build {
       "-language:postfixOps",
       "-language:implicitConversions"),
     conflictManager := ConflictManager.strict,
-    dependencyOverrides ++= depOverrides,
-    publishTo := Some(Resolver.file("file", new File(Path.userHome.absolutePath + "/.m2/repository")))
+    dependencyOverrides ++= depOverrides
+  )
+
+  lazy val publishSettings = Seq(
+    bintrayOrganization := Some("ticketmaster-api"),
+    licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+    bintrayPackageLabels := Seq("ticketmaster", "api", "scala"),
+    resolvers += Resolver.url("ticketmaster api ivy resolver", url("http://dl.bintray.com/ticketmaster-api/maven"))(Resolver.ivyStylePatterns)
+  )
+
+  lazy val unpublishSettings = Seq(
+    releasePublishArtifactsAction := {},
+    publish := {},
+    bintrayEnsureBintrayPackageExists := {},
+    bintrayUnpublish := {}
   )
 
   lazy val root = (project in file("."))
     .settings(commonSettings: _*)
+    .settings(unpublishSettings: _*)
     .settings(
-      releasePublishArtifactsAction := {},
       tutSettings,
       tut := {
         val tutted = tut.value
@@ -37,6 +51,7 @@ object SdkBuild extends Build {
 
   lazy val core = project
     .settings(commonSettings: _*)
+    .settings(publishSettings: _*)
     .settings(
       name := """core-scala""",
       libraryDependencies ++= coreDeps,
@@ -55,6 +70,7 @@ object SdkBuild extends Build {
 
   lazy val discovery = project
     .settings(commonSettings: _*)
+    .settings(publishSettings: _*)
     .settings(
       name := """discovery-scala""",
       libraryDependencies ++= discoveryDeps)
@@ -63,6 +79,7 @@ object SdkBuild extends Build {
 
   lazy val commerce = project
     .settings(commonSettings: _*)
+    .settings(publishSettings: _*)
     .settings(
       name := """commerce-scala""",
       libraryDependencies ++= commerceDeps
