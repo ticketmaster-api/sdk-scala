@@ -1,8 +1,16 @@
-# Ticketmaster API: SDK for Scala [![Build Status](https://travis-ci.org/ticketmaster-api/sdk-scala.svg?branch=master)](https://travis-ci.org/ticketmaster-api/sdk-scala)
+# Ticketmaster API: SDK for Scala [![Build Status](https://travis-ci.org/ticketmaster-api/sdk-scala.svg?branch=master)](https://travis-ci.org/ticketmaster-api/sdk-scala) [ ![Download](https://api.bintray.com/packages/ticketmaster-api/maven/discovery-scala/images/download.svg) ](https://bintray.com/ticketmaster-api/maven/discovery-scala/_latestVersion)
 
 For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports Discovery [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
 
-## Create API client
+## Dependency
+
+```scala
+libraryDependencies ++= Seq(
+  "com.ticketmaster.api" %% "discovery-scala" % "0.1.0"
+)
+```
+
+## Usage
 
 ```tut:silent
 import com.ticketmaster.api.discovery._
@@ -10,9 +18,7 @@ import com.ticketmaster.api.discovery._
 val api = Discovery("your-api-key")
 ```
 
-## Making API calls
-
-API calls are non-blocking so ensure that there is a `scala.concurrent.ExecutionContext` implicitly available.
+API calls are non-blocking so require that there is a `scala.concurrent.ExecutionContext` implicitly available.
 
 All take a case class representing the criteria for that call. For example, search events takes a `com.ticketmaster.api.discovery.SearchEventsRequest` on which you can set your criteria.
 
@@ -21,6 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import com.ticketmaster.api.discovery.domain._
+import com.ticketmaster.api.Api._
 
 val criteria = SearchEventsRequest(keyword = "coachella", size = 5)
 
@@ -29,7 +36,7 @@ val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(criteria)
 
 See docs for full list of criteria and resources they relate to.
 
-Rate limit details are provided in every response in `com.ticketmaster.api.discovery.RateLimits`. Details include current rate limit per day, time for next rate limit reset, how many calls remain in current time period and how many calls over the rate limit. In addition, search API calls will return a `com.ticketmaster.api.discovery.Page` as part of the result.
+Rate limit details are provided in every response in `com.ticketmaster.api.discovery.RateLimits`. Search API calls will return paging details in `com.ticketmaster.api.discovery.Page` as part of the result.
 
 ## Error handling
 
@@ -42,7 +49,7 @@ The default http client is [dispatch](https://github.com/dispatch/reboot). It is
 ## Remaining work
 
 * Expose _links and _embedded for each resource.
-* Remove boilerplate code transforming criteria to http request, possibly via Shapeless.
+* Remove boilerplate code transforming criteria to http request.
 
 ## Wish list
 
