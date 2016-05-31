@@ -31,14 +31,14 @@ trait HttpHandler {
   }
 
   private def handleResponse[B, R](response: HttpResponse, handler: ResponseHandler[B, R])(implicit decode: DecodeJson[B]): R = {
-    def errors = decodeEither[Errors](response.body.get).map(_.toString).getOrElse("Failed to decode body")
+    def errors = decodeEither[Errors](response.body.get).map(_.toString).getOrElse(s"Failed to decode body: ${response.body.get}")
 
     response.status match {
       case status if okRange contains status => {
         val parts = for {
-          decoded <- decodeEither[B] (response.body.get)
+          decoded <- decodeEither[B](response.body.get)
           rateLimits <- extractRateLimitInfo(response)
-        } yield(decoded, rateLimits)
+        } yield (decoded, rateLimits)
 
         parts.map(right => handler(right._1, right._2)) | (throw new ApiException("Failed to read response"))
       }
