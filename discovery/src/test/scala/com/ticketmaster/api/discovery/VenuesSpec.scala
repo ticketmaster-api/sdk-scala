@@ -65,6 +65,19 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
       t.getMessage should be("Errors(Vector(Error(DIS1004,Resource not found with provided criteria (locale=en-us, id=abcde),404)))")
     }
   }
+
+  it should "throw exception if sort param invalid" in {
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("sort" -> "asc", "apikey" -> testApiKey)) / "venues.json"
+    val response = HttpResponse(status = 400, headers = responseHeaders, body = Some(VenuesSpec.errorInvalidSortParam))
+    val api = testableApi(expectedRequest, response)
+
+    val pendingResponse: Future[PageResponse[Venues]] = api.searchVenues(SearchVenuesRequest(sort = "asc"))
+
+    whenReady(pendingResponse.failed) { t =>
+      t shouldBe a[ApiException]
+      t.getMessage should be("Errors(Vector(Error(DIS1005,Query param \"sort\" may take one of these two values only - {'name,asc', 'name,desc'},400)))")
+    }
+  }
 }
 
 object VenuesSpec {
@@ -252,6 +265,22 @@ object VenuesSpec {
       |		"_links": {
       |			"about": {
       |				"href": "/discovery/v2/errors.html#DIS1004"
+      |			}
+      |		}
+      |	}]
+      |}
+    """.stripMargin
+
+  val errorInvalidSortParam =
+    """
+      |{
+      |	"errors": [{
+      |		"code": "DIS1005",
+      |		"detail": "Query param \"sort\" may take one of these two values only - {'name,asc', 'name,desc'}",
+      |		"status": "400",
+      |		"_links": {
+      |			"about": {
+      |				"href": "/discovery/v2/errors.html#DIS1005"
       |			}
       |		}
       |	}]
