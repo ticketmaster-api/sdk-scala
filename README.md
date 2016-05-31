@@ -1,4 +1,6 @@
-# Ticketmaster API: SDK for Scala [![Build Status](https://travis-ci.org/ticketmaster-api/sdk-scala.svg?branch=master)](https://travis-ci.org/ticketmaster-api/sdk-scala) [ ![Download](https://api.bintray.com/packages/ticketmaster-api/maven/discovery-scala/images/download.svg) ](https://bintray.com/ticketmaster-api/maven/discovery-scala/_latestVersion)
+# Ticketmaster API: SDK for Scala
+
+[![Build Status](https://travis-ci.org/ticketmaster-api/sdk-scala.svg?branch=master)](https://travis-ci.org/ticketmaster-api/sdk-scala) [![Coverage Status](https://coveralls.io/repos/github/ticketmaster-api/sdk-scala/badge.svg?branch=master)](https://coveralls.io/github/ticketmaster-api/sdk-scala?branch=master) [ ![Download](https://api.bintray.com/packages/ticketmaster-api/maven/discovery-scala/images/download.svg) ](https://bintray.com/ticketmaster-api/maven/discovery-scala/_latestVersion)
 
 For more detailed information about the API and to get your API key head [here](http://developer.ticketmaster.com/). This SDK supports Discovery [v2](http://developer.ticketmaster.com/products-and-docs/apis/discovery/v2/).
 
