@@ -1,7 +1,5 @@
 package com.ticketmaster.api.discovery
 
-import java.time.ZonedDateTime
-
 import com.ticketmaster.api.Api._
 import com.ticketmaster.api.discovery.domain._
 import com.ticketmaster.api.http.protocol.{HttpRequest, HttpResponse}
@@ -9,11 +7,9 @@ import com.ticketmaster.api.test.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
+
 
 class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
-
-  override implicit val patienceConfig = PatienceConfig(2 seconds, 200 millis)
 
   val testApiKey = "12345"
 
@@ -36,7 +32,6 @@ class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
       r.pageResult._embedded.attractions.head.name should be("Coachella Valley Music and Arts Festival")
       r.pageResult.page should be(Page(20, 1, 1, 0))
       r.pageResult._links.self should be(Link("/discovery/v2/attractions.json{?page,size,sort}", Some(true)))
-      r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
 

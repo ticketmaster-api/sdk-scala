@@ -1,7 +1,5 @@
 package com.ticketmaster.api.discovery
 
-import java.time.ZonedDateTime
-
 import com.ticketmaster.api.Api._
 import com.ticketmaster.api.discovery.domain._
 import com.ticketmaster.api.http.protocol.{HttpRequest, HttpResponse}
@@ -9,12 +7,9 @@ import com.ticketmaster.api.test.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.language.postfixOps
+
 
 class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
-
-  override implicit val patienceConfig = PatienceConfig(2 seconds, 200 millis)
 
   val testApiKey = "12345"
 
@@ -37,7 +32,6 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
       r.pageResult._embedded.venues.head.name should be("Candlestick Park")
       r.pageResult.page should be(Page(20, 2, 1, 0))
       r.pageResult._links.self should be(Link("/discovery/v2/venues.json{?page,size,sort}", Some(true)))
-      r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
 
@@ -75,7 +69,7 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ApiException]
-      t.getMessage should be("Errors(Vector(Error(DIS1005,Query param \"sort\" may take one of these two values only - {'name,asc', 'name,desc'},400)))")
+      t.getMessage should be("""Errors(Vector(Error(DIS1005,Query param "sort" may take one of these two values only - {'name,asc', 'name,desc'},400)))""")
     }
   }
 }
