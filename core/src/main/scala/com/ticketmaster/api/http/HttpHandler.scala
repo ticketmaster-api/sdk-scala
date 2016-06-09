@@ -9,13 +9,14 @@ import com.ticketmaster.api.Api._
 import com.ticketmaster.api.http.protocol.{HttpRequest, HttpResponse}
 
 import scala.concurrent.ExecutionContext
-import scalaz._
+import scala.util.{Failure, Success, Try}
+import scalaz.{-\/, \/, \/-}
 
 
 trait HttpHandler {
   val apiKey: String
 
-  val USER_AGENT: String
+  val userAgent: String
 
   val okRange = 200 to 299
 
@@ -26,34 +27,65 @@ trait HttpHandler {
   def handleRequest[B, R](req: HttpRequest, handler: ResponseHandler[B, R])(implicit ec: ExecutionContext, decode: DecodeJson[B]) = {
     http(req
       .addQueryParameter("apikey", apiKey)
-      .addHeader("User-Agent", s"${USER_AGENT}/${build.Info.version}")
+      .addHeader("User-Agent", s"${userAgent}/${build.Info.version}")
     ).map(res => handleResponse(res, handler))
   }
 
   private def handleResponse[B, R](response: HttpResponse, handler: ResponseHandler[B, R])(implicit decode: DecodeJson[B]): R = {
-    def errors = decodeEither[Errors](response.body.get).map(_.toString).getOrElse(s"Failed to decode body: ${response.body.get}")
+    def eitherBody = response.body.fold[String \/ String](-\/("No response body"))(b => \/-(b))
+
+    def errorMsg(str: String) = decodeBody[Errors](str)//.map(_.toString).getOrElse(s"Failed to decode body: ${response.body.get}")
 
     response.status match {
       case status if okRange contains status => {
         val parts = for {
-          decoded <- decodeEither[B](response.body.get)
-          rateLimits <- extractRateLimitInfo(response)
-        } yield (decoded, rateLimits)
+          body <- eitherBody
+          decodedBody <- decodeBody[B](body)
+          rateLimits <- extractRateLimits(response)
+        } yield(decodedBody, rateLimits)
 
-        parts.map(right => handler(right._1, right._2)) | (throw new ApiException("Failed to read response"))
+        val (body, rateLimits) = parts.valueOr(msg => throw new ApiException(msg))
+        handler(body, rateLimits)
       }
-      case 404 => throw new ResourceNotFoundException(errors)
-      case _ => throw new ApiException(errors)
+      case 404 => {
+        val parts = for {
+          body <- eitherBody
+          decoded <- errorMsg(body)
+        } yield(decoded.toString)
+
+        throw new ResourceNotFoundException(parts.valueOr(identity))
+      }
+      case _ => {
+        val parts = for {
+          body <- eitherBody
+          decoded <- errorMsg(body)
+        } yield(decoded.toString)
+
+        throw new ApiException(parts.valueOr(identity))
+      }
     }
   }
 
-  private def extractRateLimitInfo(response: HttpResponse) = {
-    \/-(RateLimits(
-      response.headers("Rate-Limit").toInt,
-      response.headers("Rate-Limit-Available").toInt,
-      response.headers("Rate-Limit-Over").toInt,
-      ZonedDateTime.ofInstant(Instant.ofEpochMilli(response.headers("Rate-Limit-Reset").toLong), ZoneId.of("UTC"))))
-  }
+  private def decodeBody[T](json: String)(implicit decode: DecodeJson[T]): \/[String, T] = Parse.decodeEither[T](json)
 
-  private def decodeEither[T](json: String)(implicit decode: DecodeJson[T]): \/[String, T] = Parse.decodeEither[T](json)
+  private def extractRateLimits(response: HttpResponse) = {
+    def extract[T](t: => T) = {
+      Try(t) match {
+        case Success(i) => \/-(i)
+        case Failure(e) => -\/("Missing rate limit")
+      }
+    }
+
+    for {
+      rateLimit <- extract(response.headers("Rate-Limit").toInt)
+      rateLimitAvailable <- extract(response.headers("Rate-Limit-Available").toInt)
+      rateLimitOver <- extract(response.headers("Rate-Limit-Over").toInt)
+      rateLimitReset <- extract(response.headers("Rate-Limit-Reset").toLong)
+    } yield {
+      RateLimits(rateLimit,
+        rateLimitAvailable,
+        rateLimitOver,
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(rateLimitReset), ZoneId.of("UTC")))
+    }
+  }
 }

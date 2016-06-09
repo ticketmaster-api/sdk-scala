@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait HttpCommerceApi extends CommerceApi with HttpHandler {
   val ROOT_URL = "https://app.ticketmaster.com/commerce/v2"
 
-  val USER_AGENT = "Ticketmaster Commerce Scala"
+  val userAgent = "Ticketmaster Commerce Scala"
 
   override def getEventOffers(getEventOffersRequest: GetEventOffersRequest)(implicit ec: ExecutionContext): Future[Response[EventOffers]] = {
     val req = HttpRequest(root = ROOT_URL) / "events" / getEventOffersRequest.id / "offers.json"

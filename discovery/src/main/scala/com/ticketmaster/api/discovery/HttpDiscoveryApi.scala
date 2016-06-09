@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait HttpDiscoveryApi extends DiscoveryApi with HttpHandler {
   val ROOT_URL = "https://app.ticketmaster.com/discovery/v2"
 
-  val USER_AGENT = "Ticketmaster Discovery Scala"
+  val userAgent = "Ticketmaster Discovery Scala"
 
   override def searchEvents(searchEventsRequest: SearchEventsRequest)(implicit ec: ExecutionContext): Future[PageResponse[Events]] = {
     val filters = Map[String, Filter[_]]()

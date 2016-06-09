@@ -9,11 +9,9 @@ import com.ticketmaster.api.test.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 
 class EventsSpec extends BaseSpec with TestableDiscoveryApi {
-  override implicit val patienceConfig = PatienceConfig(2 seconds, 200 millis)
 
   val testApiKey = "12345"
 
@@ -36,7 +34,6 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
       r.pageResult._embedded.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
       r.pageResult.page should be(Page(20, 1, 1, 0))
       r.pageResult._links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
-      r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
 
@@ -53,7 +50,6 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
       r.pageResult._embedded.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
       r.pageResult.page should be(Page(20, 1, 1, 0))
       r.pageResult._links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
-      r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
 
