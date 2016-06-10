@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class ClassificationsSpec extends BaseSpec with TestableDiscoveryApi {
+class ClassificationsSpec extends BaseSpec with TestableHttpDiscoveryApi {
 
   val testApiKey = "12345"
 
@@ -23,7 +23,7 @@ class ClassificationsSpec extends BaseSpec with TestableDiscoveryApi {
   it should "search for all classifications" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "classifications.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(ClassificationsSpec.searchClassificationsResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[PageResponse[Classifications]] = api.searchClassifications(SearchClassificationsRequest())
 
@@ -38,7 +38,7 @@ class ClassificationsSpec extends BaseSpec with TestableDiscoveryApi {
   it should "get a classification" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "classifications" / "KZFzniwnSyZfZ7v7nE.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(ClassificationsSpec.getClassificationResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Classification]] = api.getClassification(GetClassificationRequest("KZFzniwnSyZfZ7v7nE"))
 
@@ -50,7 +50,7 @@ class ClassificationsSpec extends BaseSpec with TestableDiscoveryApi {
   it should "throw exception if classification not found" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "classifications" / "abcde.json"
     val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(ClassificationsSpec.error404))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Classification]] = api.getClassification(GetClassificationRequest("abcde"))
 

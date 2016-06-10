@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class EventsSpec extends BaseSpec with TestableDiscoveryApi {
+class EventsSpec extends BaseSpec with TestableHttpDiscoveryApi {
 
   val testApiKey = "12345"
 
@@ -23,40 +23,40 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
   behavior of "discovery event API"
 
   it should "search for an event by keyword" in {
-    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("keyword" -> "coachella", "apikey" -> testApiKey)) / "events.json"
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("keyword" -> "hollywood", "apikey" -> testApiKey)) / "events.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.searchEventsResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
-    val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(SearchEventsRequest(keyword = "coachella"))
+    val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(SearchEventsRequest(keyword = "hollywood"))
 
     whenReady(pendingResponse) { r =>
       r.pageResult._embedded.events.size should be(1)
-      r.pageResult._embedded.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
-      r.pageResult.page should be(Page(20, 1, 1, 0))
-      r.pageResult._links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
+      r.pageResult._embedded.events.head.name should be("Murray Celebrity Magician")
+      r.pageResult.page should be(Page(1,4254,4254,0))
+      r.pageResult._links.self should be(Link("/discovery/v2/events.json?view=null&size=1&keyword=hollywood{&page,sort}", Some(true)))
     }
   }
 
   it should "search for an event by start date" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("startDateTime" -> "2016-04-20T02:00:00Z", "apikey" -> testApiKey)) / "events.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.searchEventsResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val searchEventsRequest = SearchEventsRequest(startDateTime = ZonedDateTime.now(Clock.fixed(Instant.ofEpochMilli(1461117600000L), ZoneId.of("UTC"))))
     val pendingResponse: Future[PageResponse[Events]] = api.searchEvents(searchEventsRequest)
 
     whenReady(pendingResponse) { r =>
       r.pageResult._embedded.events.size should be(1)
-      r.pageResult._embedded.events.head.name should be("The Fearless Freakcast Presents: Live From Coachella Music Festival")
-      r.pageResult.page should be(Page(20, 1, 1, 0))
-      r.pageResult._links.self should be(Link("/discovery/v2/events.json{?page,size,sort}", Some(true)))
+      r.pageResult._embedded.events.head.name should be("Murray Celebrity Magician")
+      r.pageResult.page should be(Page(1,4254,4254,0))
+      r.pageResult._links.self should be(Link("/discovery/v2/events.json?view=null&size=1&keyword=hollywood{&page,sort}", Some(true)))
     }
   }
 
   it should "get event images" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "k7vGFfdS_Gp6G" / "images.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.getEventImagesResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[EventImages]] = api.getEventImages(GetEventImagesRequest("k7vGFfdS_Gp6G"))
 
@@ -68,33 +68,21 @@ class EventsSpec extends BaseSpec with TestableDiscoveryApi {
   }
 
   it should "get an event" in {
-    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "1AtZAvvGkdzqJ-n.json"
+    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "1FC8v88M_eZ75ave.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.getEventResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
-    val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("1AtZAvvGkdzqJ-n"))
-
-    whenReady(pendingResponse) { r =>
-      r.result.id should be("1AtZAvvGkdzqJ-n")
-    }
-  }
-
-  it should "get an event with no start date" in {
-    val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "G5v7ZKMqTqPKB.json"
-    val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(EventsSpec.getEventResponseNoSalesDates))
-    val api = testableApi(expectedRequest, response)
-
-    val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("G5v7ZKMqTqPKB"))
+    val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("1FC8v88M_eZ75ave"))
 
     whenReady(pendingResponse) { r =>
-      r.result.id should be("G5v7ZKMqTqPKB")
+      r.result.id should be("1FC8v88M_eZ75ave")
     }
   }
 
   it should "throw exception if event not found" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "events" / "abcde.json"
     val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(EventsSpec.error404))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Event]] = api.getEvent(GetEventRequest("abcde"))
 
@@ -111,99 +99,103 @@ object EventsSpec {
       |{
       |	"_links": {
       |		"self": {
-      |			"href": "/discovery/v2/events.json{?page,size,sort}",
+      |			"href": "/discovery/v2/events.json?view=null&size=1&keyword=hollywood{&page,sort}",
+      |			"templated": true
+      |		},
+      |		"next": {
+      |			"href": "/discovery/v2/events.json?view=null&keyword=hollywood&page=1&size=1{&sort}",
       |			"templated": true
       |		}
       |	},
       |	"_embedded": {
       |		"events": [{
-      |			"name": "The Fearless Freakcast Presents: Live From Coachella Music Festival",
+      |			"name": "Murray Celebrity Magician",
       |			"type": "event",
-      |			"id": "16e0Zf6jYG7c35T",
+      |			"id": "1FC8v88M_eZ75ave",
       |			"test": false,
-      |			"url": "http://www.ticketweb.com/t3/sale/SaleEventDetail?dispatch=loadSelectionData&eventId=6582835&REFERRAL_ID=tmfeed",
+      |			"url": "http://ticketmaster.com/event/390050437642A801",
       |			"locale": "en-us",
       |			"images": [{
       |				"ratio": "16_9",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_16_9.jpg",
-      |				"width": 1024,
-      |				"height": 576,
-      |				"fallback": true
-      |			}, {
-      |				"ratio": "3_2",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_3_2.jpg",
-      |				"width": 1024,
-      |				"height": 683,
-      |				"fallback": true
-      |			}, {
-      |				"ratio": "16_9",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_LARGE_16_9.jpg",
-      |				"width": 2048,
-      |				"height": 1152,
-      |				"fallback": true
-      |			}, {
-      |				"ratio": "16_9",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RECOMENDATION_16_9.jpg",
-      |				"width": 100,
-      |				"height": 56,
-      |				"fallback": true
+      |				"url": "http://s1.ticketm.net/dbimages/193738a.jpg",
+      |				"width": 205,
+      |				"height": 115,
+      |				"fallback": false
       |			}, {
       |				"ratio": "4_3",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_CUSTOM.jpg",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_CUSTOM.jpg",
       |				"width": 305,
       |				"height": 225,
       |				"fallback": true
       |			}, {
       |				"ratio": "3_2",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_ARTIST_PAGE_3_2.jpg",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_ARTIST_PAGE_3_2.jpg",
       |				"width": 305,
       |				"height": 203,
       |				"fallback": true
       |			}, {
       |				"ratio": "16_9",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_PORTRAIT_16_9.jpg",
-      |				"width": 640,
-      |				"height": 360,
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_RECOMENDATION_16_9.jpg",
+      |				"width": 100,
+      |				"height": 56,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_RETINA_LANDSCAPE_16_9.jpg",
+      |				"width": 1136,
+      |				"height": 639,
       |				"fallback": true
       |			}, {
       |				"ratio": "3_2",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_PORTRAIT_3_2.jpg",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_RETINA_PORTRAIT_3_2.jpg",
       |				"width": 640,
       |				"height": 427,
       |				"fallback": true
       |			}, {
-      |				"ratio": "16_9",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_EVENT_DETAIL_PAGE_16_9.jpg",
-      |				"width": 205,
-      |				"height": 115,
+      |				"ratio": "3_2",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_TABLET_LANDSCAPE_3_2.jpg",
+      |				"width": 1024,
+      |				"height": 683,
       |				"fallback": true
       |			}, {
       |				"ratio": "16_9",
-      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_LANDSCAPE_16_9.jpg",
-      |				"width": 1136,
-      |				"height": 639,
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_RETINA_PORTRAIT_16_9.jpg",
+      |				"width": 640,
+      |				"height": 360,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_TABLET_LANDSCAPE_16_9.jpg",
+      |				"width": 1024,
+      |				"height": 576,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/FAMILY_TABLET_LANDSCAPE_LARGE_16_9.jpg",
+      |				"width": 2048,
+      |				"height": 1152,
       |				"fallback": true
       |			}],
       |			"sales": {
       |				"public": {
-      |					"startDateTime": "2016-03-23T21:15:01Z",
+      |					"startDateTime": "2016-02-03T18:00:00Z",
       |					"startTBD": false,
-      |					"endDateTime": "2016-04-20T03:00:00Z"
+      |					"endDateTime": "2016-06-09T22:00:00Z"
       |				}
       |			},
       |			"dates": {
       |				"start": {
-      |					"localDate": "2016-04-19",
-      |					"localTime": "22:00:00",
-      |					"dateTime": "2016-04-20T03:00:00Z",
+      |					"localDate": "2016-06-09",
+      |					"localTime": "16:00:00",
+      |					"dateTime": "2016-06-09T23:00:00Z",
       |					"dateTBD": false,
       |					"dateTBA": false,
       |					"timeTBA": false,
       |					"noSpecificTime": false
       |				},
-      |				"timezone": "America/Chicago",
+      |				"timezone": "America/Los_Angeles",
       |				"status": {
-      |					"code": "onsale"
+      |					"code": "offsale"
       |				}
       |			},
       |			"classifications": [{
@@ -213,63 +205,162 @@ object EventsSpec {
       |					"name": "Arts & Theatre"
       |				},
       |				"genre": {
-      |					"id": "KnvZfZ7vAe1",
-      |					"name": "Comedy"
+      |					"id": "KnvZfZ7v7lv",
+      |					"name": "Magic & Illusion"
       |				},
       |				"subGenre": {
-      |					"id": "KZazBEonSMnZfZ7vF17",
-      |					"name": "Comedy"
+      |					"id": "KZazBEonSMnZfZ7v7l7",
+      |					"name": "Magic"
       |				}
       |			}],
       |			"promoter": {
-      |				"id": "0"
+      |				"id": "494"
       |			},
+      |			"info": "MURRAY Celebrity Magician featured on the History Channel's Pawn Stars and who dazzled the judges and 22 million people as a finalist on Americas Got Talent; who you have also seen on Access Hollywood LIVE and many more. He is currently on his newest TV series on Reelz Channel Extreme Escapes. This year, Murray has received the Hollywood F.A.M.E. award for Career Achievement in the Magical Arts, Best Comedy Variety Show of the Year by the Los Angeles Comedy Festival, and Comedy Show of the Year Award by the Fans of Entertainment Hall of Fame. Murray's show is great for the whole family and kids of any age where Murray ties in his comedy with spectacular illusions. You will also meet Murray's sidekick and guest act Lefty who will surprise you with his own brand of magic and his beautiful assistant Chloe!!! After the show you will get to meet Murray and his cast for photos and autographs as he loves meeting his audience! Meet and Greet is included with all ticket prices!",
+      |			"pleaseNote": "GROUPS Orders of 10 or more should be referred to the Group Sales department at 1-866-574-3851 or email EntertainmentGroupSales@Caesars.com",
+      |			"priceRanges": [{
+      |				"type": "standard",
+      |				"currency": "USD",
+      |				"min": 35.28,
+      |				"max": 45.37
+      |			}],
       |			"_links": {
       |				"self": {
-      |					"href": "/discovery/v2/events/16e0Zf6jYG7c35T?locale=en-us"
+      |					"href": "/discovery/v2/events/1FC8v88M_eZ75ave?locale=en-us"
       |				},
+      |				"attractions": [{
+      |					"href": "/discovery/v2/attractions/K8vZ917KdCV?locale=en-us"
+      |				}],
       |				"venues": [{
-      |					"href": "/discovery/v2/venues/KovZpZAJaavA?locale=en-us"
+      |					"href": "/discovery/v2/venues/KovZpZAJalJA?locale=en-us"
       |				}]
       |			},
       |			"_embedded": {
       |				"venues": [{
-      |					"name": "iO Theater ",
+      |					"name": "Sin City at Planet Hollywood Resort & Casino",
       |					"type": "venue",
-      |					"id": "KovZpZAJaavA",
+      |					"id": "KovZpZAJalJA",
       |					"test": false,
+      |					"url": "http://ticketmaster.com/venue/467880",
       |					"locale": "en-us",
-      |					"postalCode": "60642",
-      |					"timezone": "America/Chicago",
+      |					"postalCode": "89109",
+      |					"timezone": "America/Los_Angeles",
       |					"city": {
-      |						"name": "Chicago"
+      |						"name": "Las Vegas"
       |					},
       |					"state": {
-      |						"name": "Illinois",
-      |						"stateCode": "IL"
+      |						"name": "Nevada",
+      |						"stateCode": "NV"
       |					},
       |					"country": {
       |						"name": "United States Of America",
       |						"countryCode": "US"
       |					},
       |					"address": {
-      |						"line1": "1501 N Kingsbury"
+      |						"line1": "3667 Las Vegas Blvd S"
       |					},
       |					"location": {
-      |						"longitude": "-87.65189968",
-      |						"latitude": "41.90830149"
+      |						"longitude": "-115.17197706",
+      |						"latitude": "36.10959955"
       |					},
       |					"markets": [{
-      |						"id": "3"
+      |						"id": "14"
       |					}],
       |					"dmas": [{
-      |						"id": 249
-      |					}, {
-      |						"id": 373
+      |						"id": 319
       |					}],
       |					"_links": {
       |						"self": {
-      |							"href": "/discovery/v2/venues/KovZpZAJaavA?locale=en-us"
+      |							"href": "/discovery/v2/venues/KovZpZAJalJA?locale=en-us"
+      |						}
+      |					}
+      |				}],
+      |				"attractions": [{
+      |					"name": "Murray Sawchuck",
+      |					"type": "attraction",
+      |					"id": "K8vZ917KdCV",
+      |					"test": false,
+      |					"url": "http://ticketmaster.com/artist/2068753",
+      |					"locale": "en-us",
+      |					"images": [{
+      |						"ratio": "16_9",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_RECOMENDATION_16_9.jpg",
+      |						"width": 100,
+      |						"height": 56,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "4_3",
+      |						"url": "https://s1.ticketm.net/dbimages/210011a.jpg",
+      |						"width": 305,
+      |						"height": 225,
+      |						"fallback": false
+      |					}, {
+      |						"ratio": "16_9",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_LARGE_16_9.jpg",
+      |						"width": 2048,
+      |						"height": 1152,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "16_9",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_PORTRAIT_16_9.jpg",
+      |						"width": 640,
+      |						"height": 360,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "16_9",
+      |						"url": "https://s1.ticketm.net/dbimages/210012a.jpg",
+      |						"width": 205,
+      |						"height": 115,
+      |						"fallback": false
+      |					}, {
+      |						"ratio": "16_9",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_LANDSCAPE_16_9.jpg",
+      |						"width": 1136,
+      |						"height": 639,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "3_2",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_PORTRAIT_3_2.jpg",
+      |						"width": 640,
+      |						"height": 427,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "3_2",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_3_2.jpg",
+      |						"width": 1024,
+      |						"height": 683,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "16_9",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_16_9.jpg",
+      |						"width": 1024,
+      |						"height": 576,
+      |						"fallback": true
+      |					}, {
+      |						"ratio": "3_2",
+      |						"url": "http://s1.ticketm.net/dam/c/ARTS_ARTIST_PAGE_3_2.jpg",
+      |						"width": 305,
+      |						"height": 203,
+      |						"fallback": true
+      |					}],
+      |					"classifications": [{
+      |						"primary": true,
+      |						"segment": {
+      |							"id": "KZFzniwnSyZfZ7v7na",
+      |							"name": "Arts & Theatre"
+      |						},
+      |						"genre": {
+      |							"id": "KnvZfZ7v7lv",
+      |							"name": "Magic & Illusion"
+      |						},
+      |						"subGenre": {
+      |							"id": "KZazBEonSMnZfZ7v7l7",
+      |							"name": "Magic"
+      |						}
+      |					}],
+      |					"_links": {
+      |						"self": {
+      |							"href": "/discovery/v2/attractions/K8vZ917KdCV?locale=en-us"
       |						}
       |					}
       |				}]
@@ -277,9 +368,9 @@ object EventsSpec {
       |		}]
       |	},
       |	"page": {
-      |		"size": 20,
-      |		"totalElements": 1,
-      |		"totalPages": 1,
+      |		"size": 1,
+      |		"totalElements": 4254,
+      |		"totalPages": 4254,
       |		"number": 0
       |	}
       |}
@@ -363,85 +454,85 @@ object EventsSpec {
   val getEventResponse =
     """
       |{
-      |	"name": "Kroq Locals Only Presents: Black Crystal Wolf Kids Coachella Tribute S",
+      |	"name": "Murray Celebrity Magician",
       |	"type": "event",
-      |	"id": "1AtZAvvGkdzqJ-n",
+      |	"id": "1FC8v88M_eZ75ave",
       |	"test": false,
-      |	"url": "http://www.ticketweb.com/t3/sale/SaleEventDetail?dispatch=loadSelectionData&eventId=6483315&REFERRAL_ID=tmfeed",
+      |	"url": "http://ticketmaster.com/event/390050437642A801",
       |	"locale": "en-us",
       |	"images": [{
       |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_RETINA_PORTRAIT_16_9.jpg",
-      |		"width": 640,
-      |		"height": 360,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_EVENT_DETAIL_PAGE_16_9.jpg",
+      |		"url": "http://s1.ticketm.net/dbimages/193738a.jpg",
       |		"width": 205,
       |		"height": 115,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "3_2",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_ARTIST_PAGE_3_2.jpg",
-      |		"width": 305,
-      |		"height": 203,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_RETINA_LANDSCAPE_16_9.jpg",
-      |		"width": 1136,
-      |		"height": 639,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_TABLET_LANDSCAPE_16_9.jpg",
-      |		"width": 1024,
-      |		"height": 576,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "3_2",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_TABLET_LANDSCAPE_3_2.jpg",
-      |		"width": 1024,
-      |		"height": 683,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_TABLET_LANDSCAPE_LARGE_16_9.jpg",
-      |		"width": 2048,
-      |		"height": 1152,
-      |		"fallback": true
+      |		"fallback": false
       |	}, {
       |		"ratio": "4_3",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_CUSTOM.jpg",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_CUSTOM.jpg",
       |		"width": 305,
       |		"height": 225,
       |		"fallback": true
       |	}, {
       |		"ratio": "3_2",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_RETINA_PORTRAIT_3_2.jpg",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_ARTIST_PAGE_3_2.jpg",
+      |		"width": 305,
+      |		"height": 203,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_RECOMENDATION_16_9.jpg",
+      |		"width": 100,
+      |		"height": 56,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_RETINA_LANDSCAPE_16_9.jpg",
+      |		"width": 1136,
+      |		"height": 639,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "3_2",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_RETINA_PORTRAIT_3_2.jpg",
       |		"width": 640,
       |		"height": 427,
       |		"fallback": true
       |	}, {
+      |		"ratio": "3_2",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_TABLET_LANDSCAPE_3_2.jpg",
+      |		"width": 1024,
+      |		"height": 683,
+      |		"fallback": true
+      |	}, {
       |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MUSIC_RECOMENDATION_16_9.jpg",
-      |		"width": 100,
-      |		"height": 56,
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_RETINA_PORTRAIT_16_9.jpg",
+      |		"width": 640,
+      |		"height": 360,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_TABLET_LANDSCAPE_16_9.jpg",
+      |		"width": 1024,
+      |		"height": 576,
+      |		"fallback": true
+      |	}, {
+      |		"ratio": "16_9",
+      |		"url": "http://s1.ticketm.net/dam/c/FAMILY_TABLET_LANDSCAPE_LARGE_16_9.jpg",
+      |		"width": 2048,
+      |		"height": 1152,
       |		"fallback": true
       |	}],
       |	"sales": {
       |		"public": {
-      |			"startDateTime": "2016-02-01T17:35:01Z",
+      |			"startDateTime": "2016-02-03T18:00:00Z",
       |			"startTBD": false,
-      |			"endDateTime": "2016-04-11T03:00:00Z"
+      |			"endDateTime": "2016-06-09T22:00:00Z"
       |		}
       |	},
       |	"dates": {
       |		"start": {
-      |			"localDate": "2016-04-10",
-      |			"localTime": "20:00:00",
-      |			"dateTime": "2016-04-11T03:00:00Z",
+      |			"localDate": "2016-06-09",
+      |			"localTime": "16:00:00",
+      |			"dateTime": "2016-06-09T23:00:00Z",
       |			"dateTBD": false,
       |			"dateTBA": false,
       |			"timeTBA": false,
@@ -449,239 +540,172 @@ object EventsSpec {
       |		},
       |		"timezone": "America/Los_Angeles",
       |		"status": {
-      |			"code": "onsale"
-      |		}
-      |	},
-      |	"classifications": [{
-      |		"primary": true,
-      |		"segment": {
-      |			"id": "KZFzniwnSyZfZ7v7nJ",
-      |			"name": "Music"
-      |		},
-      |		"genre": {
-      |			"id": "KnvZfZ7vAeA",
-      |			"name": "Rock"
-      |		},
-      |		"subGenre": {
-      |			"id": "KZazBEonSMnZfZ7v6F1",
-      |			"name": "Pop"
-      |		}
-      |	}],
-      |	"promoter": {
-      |		"id": "0"
-      |	},
-      |	"_links": {
-      |		"self": {
-      |			"href": "/discovery/v2/events/1AtZAvvGkdzqJ-n?locale=en-us"
-      |		},
-      |		"venues": [{
-      |			"href": "/discovery/v2/venues/KovZpZAFJ71A?locale=en-us"
-      |		}]
-      |	},
-      |	"_embedded": {
-      |		"venues": [{
-      |			"name": "Molly Malones",
-      |			"type": "venue",
-      |			"id": "KovZpZAFJ71A",
-      |			"test": false,
-      |			"locale": "en-us",
-      |			"postalCode": "90036",
-      |			"timezone": "America/Los_Angeles",
-      |			"city": {
-      |				"name": "Los Angeles"
-      |			},
-      |			"state": {
-      |				"name": "California",
-      |				"stateCode": "CA"
-      |			},
-      |			"country": {
-      |				"name": "United States Of America",
-      |				"countryCode": "US"
-      |			},
-      |			"address": {
-      |				"line1": "575 South Fairfax Avenue"
-      |			},
-      |			"location": {
-      |				"longitude": "-118.36155660",
-      |				"latitude": "34.06529230"
-      |			},
-      |			"markets": [{
-      |				"id": "27"
-      |			}],
-      |			"dmas": [{
-      |				"id": 223
-      |			}, {
-      |				"id": 324
-      |			}, {
-      |				"id": 354
-      |			}, {
-      |				"id": 383
-      |			}],
-      |			"_links": {
-      |				"self": {
-      |					"href": "/discovery/v2/venues/KovZpZAFJ71A?locale=en-us"
-      |				}
-      |			}
-      |		}]
-      |	}
-      |}
-    """.stripMargin
-
-  val getEventResponseNoSalesDates =
-    """
-      |{
-      |	"name": "City and Colour VIP Experience Upgrade",
-      |	"type": "event",
-      |	"id": "G5v7ZKMqTqPKB",
-      |	"test": false,
-      |	"url": "http://ticketmaster.ca/event/11004F777F7654FA",
-      |	"locale": "en-us",
-      |	"images": [{
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_RECOMENDATION_16_9.jpg",
-      |		"width": 100,
-      |		"height": 56,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_RETINA_PORTRAIT_16_9.jpg",
-      |		"width": 640,
-      |		"height": 360,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "3_2",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_RETINA_PORTRAIT_3_2.jpg",
-      |		"width": 640,
-      |		"height": 427,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dbimages/229719a.jpg",
-      |		"width": 205,
-      |		"height": 115,
-      |		"fallback": false
-      |	}, {
-      |		"ratio": "3_2",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_ARTIST_PAGE_3_2.jpg",
-      |		"width": 305,
-      |		"height": 203,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_TABLET_LANDSCAPE_16_9.jpg",
-      |		"width": 1024,
-      |		"height": 576,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_RETINA_LANDSCAPE_16_9.jpg",
-      |		"width": 1136,
-      |		"height": 639,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "4_3",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_CUSTOM.jpg",
-      |		"width": 305,
-      |		"height": 225,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "16_9",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_TABLET_LANDSCAPE_LARGE_16_9.jpg",
-      |		"width": 2048,
-      |		"height": 1152,
-      |		"fallback": true
-      |	}, {
-      |		"ratio": "3_2",
-      |		"url": "http://s1.ticketm.net/dam/c/MISC_TABLET_LANDSCAPE_3_2.jpg",
-      |		"width": 1024,
-      |		"height": 683,
-      |		"fallback": true
-      |	}],
-      |	"sales": {
-      |		"public": {
-      |			"startTBD": false
-      |		}
-      |	},
-      |	"dates": {
-      |		"start": {
-      |			"localDate": "2016-06-06",
-      |			"localTime": "19:30:00",
-      |			"dateTime": "2016-06-07T01:30:00Z",
-      |			"dateTBD": false,
-      |			"dateTBA": false,
-      |			"timeTBA": false,
-      |			"noSpecificTime": false
-      |		},
-      |		"timezone": "America/Denver",
-      |		"status": {
       |			"code": "offsale"
       |		}
       |	},
       |	"classifications": [{
       |		"primary": true,
       |		"segment": {
-      |			"id": "KZFzniwnSyZfZ7v7n1",
-      |			"name": "Miscellaneous"
+      |			"id": "KZFzniwnSyZfZ7v7na",
+      |			"name": "Arts & Theatre"
       |		},
       |		"genre": {
-      |			"id": "KnvZfZ7v7ll",
-      |			"name": "Undefined"
+      |			"id": "KnvZfZ7v7lv",
+      |			"name": "Magic & Illusion"
       |		},
       |		"subGenre": {
-      |			"id": "KZazBEonSMnZfZ7vAv1",
-      |			"name": "Undefined"
+      |			"id": "KZazBEonSMnZfZ7v7l7",
+      |			"name": "Magic"
       |		}
       |	}],
       |	"promoter": {
       |		"id": "494"
       |	},
+      |	"info": "MURRAY Celebrity Magician featured on the History Channel's Pawn Stars and who dazzled the judges and 22 million people as a finalist on Americas Got Talent; who you have also seen on Access Hollywood LIVE and many more. He is currently on his newest TV series on Reelz Channel Extreme Escapes. This year, Murray has received the Hollywood F.A.M.E. award for Career Achievement in the Magical Arts, Best Comedy Variety Show of the Year by the Los Angeles Comedy Festival, and Comedy Show of the Year Award by the Fans of Entertainment Hall of Fame. Murray's show is great for the whole family and kids of any age where Murray ties in his comedy with spectacular illusions. You will also meet Murray's sidekick and guest act Lefty who will surprise you with his own brand of magic and his beautiful assistant Chloe!!! After the show you will get to meet Murray and his cast for photos and autographs as he loves meeting his audience! Meet and Greet is included with all ticket prices!",
+      |	"pleaseNote": "GROUPS Orders of 10 or more should be referred to the Group Sales department at 1-866-574-3851 or email EntertainmentGroupSales@Caesars.com",
+      |	"priceRanges": [{
+      |		"type": "standard",
+      |		"currency": "USD",
+      |		"min": 35.28,
+      |		"max": 45.37
+      |	}],
       |	"_links": {
       |		"self": {
-      |			"href": "/discovery/v2/events/G5v7ZKMqTqPKB?locale=en-us"
+      |			"href": "/discovery/v2/events/1FC8v88M_eZ75ave?locale=en-us"
       |		},
+      |		"attractions": [{
+      |			"href": "/discovery/v2/attractions/K8vZ917KdCV?locale=en-us"
+      |		}],
       |		"venues": [{
-      |			"href": "/discovery/v2/venues/KovZpZAFFlkA?locale=en-us"
+      |			"href": "/discovery/v2/venues/KovZpZAJalJA?locale=en-us"
       |		}]
       |	},
       |	"_embedded": {
       |		"venues": [{
-      |			"name": "ENMAX Centrium",
+      |			"name": "Sin City at Planet Hollywood Resort & Casino",
       |			"type": "venue",
-      |			"id": "KovZpZAFFlkA",
+      |			"id": "KovZpZAJalJA",
       |			"test": false,
-      |			"url": "http://ticketmaster.ca/venue/139380",
+      |			"url": "http://ticketmaster.com/venue/467880",
       |			"locale": "en-us",
-      |			"postalCode": "T4R 2N7",
-      |			"timezone": "America/Denver",
+      |			"postalCode": "89109",
+      |			"timezone": "America/Los_Angeles",
       |			"city": {
-      |				"name": "Red Deer"
+      |				"name": "Las Vegas"
       |			},
       |			"state": {
-      |				"name": "Alberta",
-      |				"stateCode": "AB"
+      |				"name": "Nevada",
+      |				"stateCode": "NV"
       |			},
       |			"country": {
-      |				"name": "Canada",
-      |				"countryCode": "CA"
+      |				"name": "United States Of America",
+      |				"countryCode": "US"
       |			},
       |			"address": {
-      |				"line1": "4847b 19th St."
+      |				"line1": "3667 Las Vegas Blvd S"
       |			},
       |			"location": {
-      |				"longitude": "-113.80353040",
-      |				"latitude": "52.22900420"
+      |				"longitude": "-115.17197706",
+      |				"latitude": "36.10959955"
       |			},
       |			"markets": [{
-      |				"id": "107"
+      |				"id": "14"
       |			}],
       |			"dmas": [{
-      |				"id": 506
-      |			}, {
-      |				"id": 523
+      |				"id": 319
       |			}],
       |			"_links": {
       |				"self": {
-      |					"href": "/discovery/v2/venues/KovZpZAFFlkA?locale=en-us"
+      |					"href": "/discovery/v2/venues/KovZpZAJalJA?locale=en-us"
+      |				}
+      |			}
+      |		}],
+      |		"attractions": [{
+      |			"name": "Murray Sawchuck",
+      |			"type": "attraction",
+      |			"id": "K8vZ917KdCV",
+      |			"test": false,
+      |			"url": "http://ticketmaster.com/artist/2068753",
+      |			"locale": "en-us",
+      |			"images": [{
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RECOMENDATION_16_9.jpg",
+      |				"width": 100,
+      |				"height": 56,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "4_3",
+      |				"url": "https://s1.ticketm.net/dbimages/210011a.jpg",
+      |				"width": 305,
+      |				"height": 225,
+      |				"fallback": false
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_LARGE_16_9.jpg",
+      |				"width": 2048,
+      |				"height": 1152,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_PORTRAIT_16_9.jpg",
+      |				"width": 640,
+      |				"height": 360,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "https://s1.ticketm.net/dbimages/210012a.jpg",
+      |				"width": 205,
+      |				"height": 115,
+      |				"fallback": false
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_LANDSCAPE_16_9.jpg",
+      |				"width": 1136,
+      |				"height": 639,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "3_2",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_RETINA_PORTRAIT_3_2.jpg",
+      |				"width": 640,
+      |				"height": 427,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "3_2",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_3_2.jpg",
+      |				"width": 1024,
+      |				"height": 683,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "16_9",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_TABLET_LANDSCAPE_16_9.jpg",
+      |				"width": 1024,
+      |				"height": 576,
+      |				"fallback": true
+      |			}, {
+      |				"ratio": "3_2",
+      |				"url": "http://s1.ticketm.net/dam/c/ARTS_ARTIST_PAGE_3_2.jpg",
+      |				"width": 305,
+      |				"height": 203,
+      |				"fallback": true
+      |			}],
+      |			"classifications": [{
+      |				"primary": true,
+      |				"segment": {
+      |					"id": "KZFzniwnSyZfZ7v7na",
+      |					"name": "Arts & Theatre"
+      |				},
+      |				"genre": {
+      |					"id": "KnvZfZ7v7lv",
+      |					"name": "Magic & Illusion"
+      |				},
+      |				"subGenre": {
+      |					"id": "KZazBEonSMnZfZ7v7l7",
+      |					"name": "Magic"
+      |				}
+      |			}],
+      |			"_links": {
+      |				"self": {
+      |					"href": "/discovery/v2/attractions/K8vZ917KdCV?locale=en-us"
       |				}
       |			}
       |		}]

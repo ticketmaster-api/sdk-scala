@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
+class AttractionsSpec extends BaseSpec with TestableHttpDiscoveryApi {
 
   val testApiKey = "12345"
 
@@ -23,7 +23,7 @@ class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
   it should "search for an attraction by keyword" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("keyword" -> "coachella", "apikey" -> testApiKey)) / "attractions.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(AttractionsSpec.searchAttractionsResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[PageResponse[Attractions]] = api.searchAttractions(SearchAttractionsRequest(keyword = "coachella"))
 
@@ -38,7 +38,7 @@ class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
   it should "get an attraction" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "attractions" / "K8vZ9171q60.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(AttractionsSpec.getAttractionResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Attraction]] = api.getAttraction(GetAttractionRequest("K8vZ9171q60"))
 
@@ -50,7 +50,7 @@ class AttractionsSpec extends BaseSpec with TestableDiscoveryApi {
   it should "throw exception if attraction not found" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "attractions" / "abcde.json"
     val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(AttractionsSpec.error404))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Attraction]] = api.getAttraction(GetAttractionRequest("abcde"))
 

@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
+class VenuesSpec extends BaseSpec with TestableHttpDiscoveryApi {
 
   val testApiKey = "12345"
 
@@ -23,7 +23,7 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
   it should "search for a venue by keyword" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("keyword" -> "candlestick", "apikey" -> testApiKey)) / "venues.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(VenuesSpec.searchVenuesResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[PageResponse[Venues]] = api.searchVenues(SearchVenuesRequest(keyword = "candlestick"))
 
@@ -38,7 +38,7 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
   it should "get a venue" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "venues" / "KovZpZAalvAA.json"
     val response = HttpResponse(status = 200, headers = responseHeaders, body = Some(VenuesSpec.getVenueResponse))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Venue]] = api.getVenue(GetVenueRequest("KovZpZAalvAA"))
 
@@ -50,7 +50,7 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
   it should "throw exception if venue not found" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("apikey" -> testApiKey)) / "venues" / "abcde.json"
     val response = HttpResponse(status = 404, headers = responseHeaders, body = Some(VenuesSpec.error404))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[Response[Venue]] = api.getVenue(GetVenueRequest("abcde"))
 
@@ -63,7 +63,7 @@ class VenuesSpec extends BaseSpec with TestableDiscoveryApi {
   it should "throw exception if sort param invalid" in {
     val expectedRequest = HttpRequest(root = "https://app.ticketmaster.com/discovery/v2", queryParams = Map("sort" -> "asc", "apikey" -> testApiKey)) / "venues.json"
     val response = HttpResponse(status = 400, headers = responseHeaders, body = Some(VenuesSpec.errorInvalidSortParam))
-    val api = testableApi(expectedRequest, response)
+    val api = newHttpDiscoveryApi(expectedRequest, response)
 
     val pendingResponse: Future[PageResponse[Venues]] = api.searchVenues(SearchVenuesRequest(sort = "asc"))
 
