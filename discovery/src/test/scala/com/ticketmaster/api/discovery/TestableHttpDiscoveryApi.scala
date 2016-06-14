@@ -7,12 +7,12 @@ import org.scalatest.Suite
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TestableDiscoveryApi extends MockFactory {
+trait TestableHttpDiscoveryApi extends MockFactory {
   this: Suite =>
 
   val testApiKey: String
 
-  def testableApi(expectedRequest: HttpRequest, response: HttpResponse) = {
+  def newHttpDiscoveryApi(expectedRequest: HttpRequest, response: HttpResponse) = {
     new HttpDiscoveryApi() {
       override val apiKey: String = testApiKey
 

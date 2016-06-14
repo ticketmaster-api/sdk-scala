@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TestableHttpHandler extends MockFactory {
   this: Suite =>
 
-  def newHandler(expectedRequest: HttpRequest, response: HttpResponse) = {
+  def newHttpHandler(expectedRequest: HttpRequest, response: HttpResponse) = {
     new HttpHandler {
       override val apiKey: String = "12345"
       override val userAgent: String = "Ticketmaster Test Scala"
@@ -32,9 +32,9 @@ trait TestableHttpHandler extends MockFactory {
   }
 }
 
-case class Body(name: String)
+case class SomeBody(name: String)
 
-case class SomeResponse(body: Body, rateLimits: RateLimits)
+case class SomeResponse(body: SomeBody, rateLimits: RateLimits)
 
 class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
 
@@ -50,14 +50,14 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
       .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
     val httpResponse = HttpResponse(200, body = Some("""{"name" : "max"}"""), headers = responseHeaders)
 
-    val handler = newHandler(expectedHttpRequest, httpResponse)
+    val handler = newHttpHandler(expectedHttpRequest, httpResponse)
 
     val actualHttpRequest = HttpRequest("https://app.ticketmaster.com/")
-    val responseHandler = (body: Body, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
-    val pendingResponse = handler.handleRequest[Body, SomeResponse](actualHttpRequest, responseHandler)
+    val responseHandler = (body: SomeBody, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
+    val pendingResponse = handler.handleRequest[SomeBody, SomeResponse](actualHttpRequest, responseHandler)
 
     whenReady(pendingResponse) { r =>
-      r.body should be(Body("max"))
+      r.body should be(SomeBody("max"))
       r.rateLimits should be(RateLimits(5000, 5000, 0, ZonedDateTime.parse("2016-01-19T05:16:34.367Z[UTC]")))
     }
   }
@@ -67,12 +67,12 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
       .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
     val httpResponse = HttpResponse(200, body = Some("""{"name" : "max"}"""))
 
-    val handler = newHandler(expectedHttpRequest, httpResponse)
+    val handler = newHttpHandler(expectedHttpRequest, httpResponse)
 
     val actualHttpRequest = HttpRequest("https://app.ticketmaster.com/")
-    val responseHandler = (body: Body, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
+    val responseHandler = (body: SomeBody, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
 
-    val pendingResponse = handler.handleRequest[Body, SomeResponse](actualHttpRequest, responseHandler)
+    val pendingResponse = handler.handleRequest[SomeBody, SomeResponse](actualHttpRequest, responseHandler)
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ApiException]
@@ -85,12 +85,12 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
       .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
     val httpResponse = HttpResponse(200)
 
-    val handler = newHandler(expectedHttpRequest, httpResponse)
+    val handler = newHttpHandler(expectedHttpRequest, httpResponse)
 
     val actualHttpRequest = HttpRequest("https://app.ticketmaster.com/")
-    val responseHandler = (body: Body, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
+    val responseHandler = (body: SomeBody, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
 
-    val pendingResponse = handler.handleRequest[Body, SomeResponse](actualHttpRequest, responseHandler)
+    val pendingResponse = handler.handleRequest[SomeBody, SomeResponse](actualHttpRequest, responseHandler)
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ApiException]
@@ -103,12 +103,12 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
       .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
     val httpResponse = HttpResponse(200, body = Some("""{"person" : "max"}"""))
 
-    val handler = newHandler(expectedHttpRequest, httpResponse)
+    val handler = newHttpHandler(expectedHttpRequest, httpResponse)
 
     val actualHttpRequest = HttpRequest("https://app.ticketmaster.com/")
-    val responseHandler = (body: Body, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
+    val responseHandler = (body: SomeBody, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
 
-    val pendingResponse = handler.handleRequest[Body, SomeResponse](actualHttpRequest, responseHandler)
+    val pendingResponse = handler.handleRequest[SomeBody, SomeResponse](actualHttpRequest, responseHandler)
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ApiException]
@@ -121,12 +121,12 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
       .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
     val httpResponse = HttpResponse(404, body = Some(HttpHandlerTest.error404))
 
-    val handler = newHandler(expectedHttpRequest, httpResponse)
+    val handler = newHttpHandler(expectedHttpRequest, httpResponse)
 
     val actualHttpRequest = HttpRequest("https://app.ticketmaster.com/")
-    val responseHandler = (body: Body, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
+    val responseHandler = (body: SomeBody, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
 
-    val pendingResponse = handler.handleRequest[Body, SomeResponse](actualHttpRequest, responseHandler)
+    val pendingResponse = handler.handleRequest[SomeBody, SomeResponse](actualHttpRequest, responseHandler)
 
     whenReady(pendingResponse.failed) { t =>
       t shouldBe a[ResourceNotFoundException]

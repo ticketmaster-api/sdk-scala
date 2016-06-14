@@ -3,16 +3,19 @@ package com.ticketmaster.api.discovery
 object domain {
   case class Events(events: Seq[Event])
 
-  case class Event(id: String,
-                   name: String,
+  case class Event(name: String,
+                   `type`: String,
+                   id: String,
+                   test: Boolean,
                    locale: String,
                    url: String,
+                   pleaseNote: Option[String],
+                   priceRanges: Option[Seq[PriceRange]],
                    promoter: Option[Promoter],
+                   info: Option[String],
+                   images: Seq[Image],
                    sales: Sales,
                    dates: Dates,
-                   test: Boolean,
-                   `type`: String,
-                   images: Seq[Image],
                    classifications: Option[Seq[EventClassification]])
 
   case class EventImages(`type`: String,
@@ -37,6 +40,11 @@ object domain {
                                  segment: Segment,
                                  genre: Genre,
                                  subgenre: Genre)
+
+  case class PriceRange(`type`: String,
+                        currency: String,
+                        min: BigDecimal,
+                        max: BigDecimal)
 
   case class Promoter(id: String)
 
