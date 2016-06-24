@@ -49,7 +49,7 @@ object domain {
   case class Promoter(id: String)
 
   case class Dates(start: Date,
-                   timezone: String,
+                   timezone: Option[String],
                    status: Status)
 
   case class Date(dateTime: Option[String],
