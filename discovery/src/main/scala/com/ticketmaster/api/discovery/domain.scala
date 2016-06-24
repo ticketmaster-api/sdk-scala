@@ -62,7 +62,7 @@ object domain {
 
   case class Status(code: String)
 
-  case class Image(ratio: String, url: String, width: Int, height: Int, fallback: Boolean)
+  case class Image(ratio: Option[String], url: String, width: Int, height: Int, fallback: Boolean)
 
   case class Sales(public: PublicSales)
 
