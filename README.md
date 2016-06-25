@@ -8,7 +8,7 @@ For more detailed information about the API and to get your API key head [here](
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.ticketmaster.api" %% "discovery-scala" % "0.1.1"
+  "com.ticketmaster.api" %% "discovery-scala" % "0.1.3"
 )
 ```
 
