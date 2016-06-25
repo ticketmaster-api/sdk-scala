@@ -116,7 +116,7 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
     }
   }
 
-  it should "handle 404 response" in {
+  it should "handle 404 response - resource not found" in {
     val expectedHttpRequest = HttpRequest("https://app.ticketmaster.com/", queryParams = Map("apikey" -> "12345"))
       .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
     val httpResponse = HttpResponse(404, body = Some(HttpHandlerTest.error404))
@@ -133,6 +133,24 @@ class HttpHandlerTest extends BaseSpec with TestableHttpHandler {
       t.getMessage should be("Errors(Vector(Error(ABC123,Resource not found with provided criteria,404)))")
     }
   }
+
+  it should "handle 400 response - invalid query param size" in {
+    val expectedHttpRequest = HttpRequest("https://app.ticketmaster.com/", queryParams = Map("apikey" -> "12345"))
+      .addHeader(s"User-Agent", s"Ticketmaster Test Scala/${build.Info.version}")
+    val httpResponse = HttpResponse(400, body = Some(HttpHandlerTest.error400))
+
+    val handler = newHttpHandler(expectedHttpRequest, httpResponse)
+
+    val actualHttpRequest = HttpRequest("https://app.ticketmaster.com/")
+    val responseHandler = (body: SomeBody, rateLimits: RateLimits) => SomeResponse(body, rateLimits)
+
+    val pendingResponse = handler.handleRequest[SomeBody, SomeResponse](actualHttpRequest, responseHandler)
+
+    whenReady(pendingResponse.failed) { t =>
+      t shouldBe a[ApiException]
+      t.getMessage should be("Errors(Vector(Error(ABC123,Query param \"size\" must be between 1 to 500,400)))")
+    }
+  }
 }
 
 object HttpHandlerTest {
@@ -143,6 +161,22 @@ object HttpHandlerTest {
       |		"code": "ABC123",
       |		"detail": "Resource not found with provided criteria",
       |		"status": "404",
+      |		"_links": {
+      |			"about": {
+      |				"href": "/errors.html#ABC123"
+      |			}
+      |		}
+      |	}]
+      |}
+    """.stripMargin
+
+  val error400 =
+    """
+      |{
+      |	"errors": [{
+      |		"code": "ABC123",
+      |		"detail": "Query param \"size\" must be between 1 to 500",
+      |		"status": "400",
       |		"_links": {
       |			"about": {
       |				"href": "/errors.html#ABC123"

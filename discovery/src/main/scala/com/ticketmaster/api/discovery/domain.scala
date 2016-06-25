@@ -60,7 +60,7 @@ object domain {
                   timeTBA: Boolean,
                   noSpecificTime: Boolean)
 
-  case class Status(code: String)
+  case class Status(code: Option[String])
 
   case class Image(ratio: Option[String], url: String, width: Int, height: Int, fallback: Boolean)
 
